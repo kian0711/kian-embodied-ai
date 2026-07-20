@@ -18,16 +18,18 @@ async function ensureTables(db:D1Database) {
 
 async function dailySync(db:D1Database) {
   const today=new Date().toISOString().slice(0,10); const existing=await db.prepare("SELECT last_sync_date FROM paper_sync WHERE id = ?").bind("global").first<{last_sync_date:string}>();
-  if(existing?.last_sync_date===today) return {live:true,added:0};
-  let added=0;
+  const countRow=await db.prepare("SELECT COUNT(*) AS total FROM papers").first<{total:number}>(); let currentTotal=Number(countRow?.total??0); const bootstrap=currentTotal<50;
+  if(existing?.last_sync_date===today&&!bootstrap) return {live:true,added:0};
+  let added=0; let reachedTarget=false;
   for(const feed of feeds){
     try{
       const fields="title,abstract,year,authors,url,citationCount,publicationDate";
-      const url=`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(feed.query)}&limit=12&fields=${fields}`;
+      const url=`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(feed.query)}&limit=${bootstrap?100:16}&fields=${fields}`;
       const response=await fetch(url,{headers:{"User-Agent":"KIAN-Embodied-AI-Learning/1.0"}}); if(!response.ok) continue;
       const result=await response.json() as {data?:Array<{paperId:string;title:string;abstract?:string;year?:number;authors?:Array<{name:string}>;url?:string;citationCount?:number;publicationDate?:string}>};
-      const currentYear=new Date().getFullYear(); const selected=(result.data??[]).filter(p=>p.paperId&&p.title&&p.year&&p.year>=currentYear-3).sort((a,b)=>(b.citationCount??0)-(a.citationCount??0)).slice(0,4);
-      for(const paper of selected){const outcome=await db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,paper.url??`https://www.semanticscholar.org/paper/${paper.paperId}`,feed.category,feed.label,paper.citationCount??0,today).run(); if(outcome.meta.changes) added+=Number(outcome.meta.changes);}
+      const selected=(result.data??[]).filter(p=>p.paperId&&p.title&&p.year&&p.year>=2020&&p.year<=2026).sort((a,b)=>(b.citationCount??0)-(a.citationCount??0)).slice(0,bootstrap?30:4);
+      for(const paper of selected){if(bootstrap&&currentTotal>=50){reachedTarget=true;break} const outcome=await db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,paper.url??`https://www.semanticscholar.org/paper/${paper.paperId}`,feed.category,feed.label,paper.citationCount??0,today).run(); if(outcome.meta.changes){const changes=Number(outcome.meta.changes);added+=changes;currentTotal+=changes}}
+      if(reachedTarget) break;
     }catch{continue}
   }
   const now=new Date().toISOString(); await db.prepare(`INSERT INTO paper_sync (id,last_sync_date,last_sync_at,added_count) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET last_sync_date=excluded.last_sync_date,last_sync_at=excluded.last_sync_at,added_count=excluded.added_count`).bind("global",today,now,added).run();
