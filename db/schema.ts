@@ -44,3 +44,14 @@ export const siteViews = sqliteTable("site_views", {
   viewCount: integer("view_count").notNull().default(0),
   updatedAt: text("updated_at").notNull(),
 });
+
+export const collaborators = sqliteTable("collaborators", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  school: text("school").notNull(),
+  researchDirection: text("research_direction").notNull(),
+  bio: text("bio").notNull(),
+  photoKey: text("photo_key").notNull(),
+  photoName: text("photo_name").notNull(),
+  createdAt: text("created_at").notNull(),
+});

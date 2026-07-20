@@ -1,0 +1,15 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+type Member={id:number;name:string;school:string;researchDirection:string;bio:string};
+
+export default function CollaboratorAdminPage(){
+  const [key,setKey]=useState(""); const [members,setMembers]=useState<Member[]>([]); const [status,setStatus]=useState(""); const [busy,setBusy]=useState(false);
+  async function load(){ if(!key){setStatus("请先输入管理员密钥");return;} const response=await fetch("/api/collaborators"); const data=await response.json() as {collaborators?:Member[]}; setMembers(data.collaborators||[]); }
+  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setStatus("正在添加共创成员…");const form=event.currentTarget;try{const response=await fetch("/api/collaborators",{method:"POST",headers:{Authorization:`Bearer ${key}`},body:new FormData(form)});const data=await response.json() as {error?:string};if(!response.ok)throw new Error(data.error||"添加失败");form.reset();setStatus("成员已添加并展示在合作共创区域");await load();}catch(error){setStatus(error instanceof Error?error.message:"添加失败");}finally{setBusy(false);}}
+  async function remove(id:number){if(!window.confirm("确认删除这位共创成员吗？"))return;const response=await fetch(`/api/collaborators/${id}`,{method:"DELETE",headers:{Authorization:`Bearer ${key}`}});const data=await response.json() as {error?:string};setStatus(response.ok?"成员已删除":data.error||"删除失败");if(response.ok)await load();}
+  return <main className="admin-page"><div className="admin-shell"><a className="admin-back" href="/">← 返回 KIAN 学习地图</a><p className="eyebrow"><span /> CO-CREATION ADMIN DESK</p><h1>合作共创成员管理</h1><p className="admin-lead">由管理员统一添加共创伙伴的公开资料。照片将与姓名、学校、研究方向及个人简介一同展示在首页。</p>
+    <form className="paper-form collaborator-form" onSubmit={submit}><label className="wide">管理员密钥<input type="password" value={key} onChange={event=>setKey(event.target.value)} required /></label><label>姓名<input name="name" maxLength={80} required placeholder="成员姓名" /></label><label>学校<input name="school" maxLength={160} required placeholder="学校 / 院系" /></label><label className="wide">研究方向<input name="researchDirection" maxLength={300} required placeholder="例如：视觉语言动作模型、机器人学习" /></label><label className="wide">个人简介<textarea name="bio" maxLength={2000} required placeholder="介绍研究经历、关注的问题与希望开展的合作" /></label><label className="wide file-field">个人照片<input name="photo" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" required /><small>支持 JPG、PNG、WebP，最大 4MB；建议使用清晰的正方形或竖版照片</small></label><button className="wide" disabled={busy}>{busy?"正在添加…":"添加共创成员 →"}</button>{status&&<p className="wide form-status" role="status">{status}</p>}</form>
+    <section className="review-desk"><div className="review-head"><div><small>ADMIN ONLY</small><h2>已展示成员</h2></div><button onClick={load}>刷新列表</button></div><div className="review-list">{members.map(member=><article key={member.id}><div><small>{member.school}</small><h3>{member.name}</h3><span>{member.researchDirection}</span></div><div className="review-actions"><button className="danger" onClick={()=>remove(member.id)}>删除</button></div></article>)}</div></section>
+  </div></main>;
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AccumulatingPaperLibrary } from "./components/AccumulatingPaperLibrary";
 import { MyPaperLibrary } from "./components/MyPaperLibrary";
 import { SiteFooter } from "./components/SiteFooter";
+import { CollaboratorSection } from "./components/CollaboratorSection";
 
 const tracks = [
   { id: "foundation", step: "01", title: "基础导航", en: "FOUNDATIONS", desc: "从具身智能的核心问题出发，建立机器人学、视觉与强化学习的共同语言。", lessons: 12, time: "6 小时", color: "violet" },
@@ -23,7 +24,7 @@ export default function Home() {
     <main>
       <nav className="nav shell" aria-label="主导航">
         <a href="#top" className="brand" aria-label="KIAN 具身智能学习站首页"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a>
-        <div className="nav-links"><a href="#roadmap">学习路径</a><a href="#papers">论文图谱</a><a href="#my-papers">我的精读</a><a href="#practice">实践地图</a></div>
+        <div className="nav-links"><a href="#roadmap">学习路径</a><a href="#papers">论文图谱</a><a href="#my-papers">我的精读</a><a href="#collaboration">合作共创</a><a href="#practice">实践地图</a></div>
         <a className="nav-cta" href="#roadmap">开始探索 <span>↗</span></a>
       </nav>
 
@@ -67,6 +68,8 @@ export default function Home() {
       <section className="papers-section" id="papers"><div className="shell"><AccumulatingPaperLibrary /></div></section>
 
       <MyPaperLibrary />
+
+      <CollaboratorSection />
 
       <section className="practice shell" id="practice">
         <div><p className="eyebrow"><span /> LEARN BY BUILDING</p><h2>让知识在机器人身上<br /><span>真正发生。</span></h2><p>从仿真到真实世界，完成你的第一个视觉语言动作闭环。</p><a href="#roadmap" className="primary-btn">开始第一个实验 <b>→</b></a></div>
