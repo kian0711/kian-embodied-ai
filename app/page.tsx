@@ -69,7 +69,7 @@ export default function Home() {
         <div className="pipeline"><div><b>01</b><span>看见</span><small>Vision</small></div><i>→</i><div><b>02</b><span>理解</span><small>Language</small></div><i>→</i><div><b>03</b><span>规划</span><small>Policy</small></div><i>→</i><div><b>04</b><span>行动</span><small>Action</small></div></div>
       </section>
 
-      <footer className="shell"><a href="#top" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>让知识拥有身体，让智能走进真实世界。</p><span>© 2026 KIAN · LEARN, BUILD, EMBODY.</span></footer>
+      <footer className="shell"><a href="#top" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>原创课程内容，未经书面授权禁止复制、转载或商用。<a className="copyright-link" href="/copyright">版权声明</a></p><span>© 2026 KIAN · ALL RIGHTS RESERVED.</span></footer>
     </main>
   );
 }

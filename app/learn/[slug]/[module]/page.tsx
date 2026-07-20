@@ -33,6 +33,6 @@ export default async function DetailedLessonPage({ params }: { params: Promise<{
         <section id="review"><small>09 · REVIEW</small><h2>复习与验收</h2><p>{article.review}</p><div className="review-box"><b>本课最终验收</b><p>{chapter.checkpoint}</p><span>完成后再进入下一模块，不以“看过”代替“做到”。</span></div></section>
       </article></div>
     <section className="lesson-nav shell"><div>{previous&&<a href={`/learn/${track.id}/${previous.no}`}>← 上一课<small>{previous.title}</small></a>}</div><a href={`/learn/${track.id}`}>返回课程目录</a><div>{next&&<a href={`/learn/${track.id}/${next.no}`}>下一课 →<small>{next.title}</small></a>}</div></section>
-    <footer className="shell"><a href="/" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>让知识拥有身体，让智能走进真实世界。</p><span>© 2026 KIAN</span></footer>
+    <footer className="shell"><a href="/" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>原创课程内容，未经书面授权禁止复制、转载或商用。<a className="copyright-link" href="/copyright">版权声明</a></p><span>© 2026 KIAN · ALL RIGHTS RESERVED.</span></footer>
   </main>;
 }

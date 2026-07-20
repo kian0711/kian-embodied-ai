@@ -17,6 +17,6 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
     <section className="concept-section" id="concepts"><div className="shell concept-layout"><div><p className="eyebrow"><span /> KNOWLEDGE CHECKPOINT</p><h2>必须掌握的<br />关键概念</h2></div><div className="concept-grid">{track.concepts.map((concept,index)=><div key={concept}><span>0{index+1}</span><b>{concept}</b></div>)}</div><aside id={`project-${track.id}`}><small>路线项目</small><h3>{track.project.title}</h3><p>{track.project.desc}</p><em>{track.project.stack}</em><ul className="deliverables">{track.project.deliverables.map((item)=><li key={item}>{item}</li>)}</ul></aside></div></section>
     <div className="shell" id="papers"><PaperFeed track={track.id} /></div>
     <section className="next-track shell"><p>下一步</p><h2>继续沿 KIAN 学习星图前进</h2><div>{learningTracks.filter(t=>t.id!==track.id).map(t=><a key={t.id} href={`/learn/${t.id}`}><span>{t.step}</span>{t.title}<b>→</b></a>)}</div></section>
-    <footer className="shell"><a href="/" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>让知识拥有身体，让智能走进真实世界。</p><span>© 2026 KIAN</span></footer>
+    <footer className="shell"><a href="/" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>原创课程内容，未经书面授权禁止复制、转载或商用。<a className="copyright-link" href="/copyright">版权声明</a></p><span>© 2026 KIAN · ALL RIGHTS RESERVED.</span></footer>
   </main>;
 }
