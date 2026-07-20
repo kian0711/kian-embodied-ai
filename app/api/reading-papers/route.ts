@@ -13,6 +13,7 @@ async function ensureTable(db: D1Database) {
     paper_url TEXT NOT NULL DEFAULT '',
     image_key TEXT NOT NULL DEFAULT '',
     image_name TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'approved',
     pdf_key TEXT NOT NULL,
     pdf_name TEXT NOT NULL,
     pdf_size INTEGER NOT NULL,
@@ -26,14 +27,15 @@ function isAdmin(request: NextRequest) {
   return configured.length >= 12 && supplied === configured;
 }
 
-export async function GET() {
+export async function GET(request:NextRequest) {
   try {
     const db = getD1();
     await ensureTable(db);
-    const rows = await db.prepare(`SELECT id,title,innovation,method,result,implementation,paper_url AS paperUrl,
+    const admin=isAdmin(request); const where=admin?"":"WHERE status = 'approved'";
+    const rows = await db.prepare(`SELECT id,title,innovation,method,result,implementation,paper_url AS paperUrl,status,
       CASE WHEN image_key <> '' THEN 1 ELSE 0 END AS hasImage,
       created_at AS createdAt
-      FROM reading_papers ORDER BY created_at DESC, id DESC`).all();
+      FROM reading_papers ${where} ORDER BY created_at DESC, id DESC`).all();
     return NextResponse.json({ papers: rows.results }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json({ papers: [], error: error instanceof Error ? error.message : "unavailable" }, { status: 500 });
@@ -68,9 +70,9 @@ export async function POST(request: NextRequest) {
     const createdAt = new Date().toISOString();
     try {
       const inserted = await db.prepare(`INSERT INTO reading_papers
-        (title,innovation,method,result,implementation,paper_url,image_key,image_name,pdf_key,pdf_name,pdf_size,created_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id`).bind(values.title, values.innovation, values.method, values.result, values.implementation, paperUrl, imageKey, imageName, "", "", 0, createdAt).first<{ id: number }>();
-      return NextResponse.json({ ok: true, id: inserted?.id }, { status: 201 });
+        (title,innovation,method,result,implementation,paper_url,image_key,image_name,status,pdf_key,pdf_name,pdf_size,created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id`).bind(values.title, values.innovation, values.method, values.result, values.implementation, paperUrl, imageKey, imageName, "pending", "", "", 0, createdAt).first<{ id: number }>();
+      return NextResponse.json({ ok: true, id: inserted?.id, status:"pending" }, { status: 201 });
     } catch(error) { if(imageKey && env.FILES) await env.FILES.delete(imageKey); throw error; }
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "上传失败" }, { status: 500 });

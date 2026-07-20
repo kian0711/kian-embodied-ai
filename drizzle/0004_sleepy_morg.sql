@@ -1,0 +1,1 @@
+ALTER TABLE `reading_papers` ADD `status` text DEFAULT 'approved' NOT NULL;

@@ -2,10 +2,27 @@
 
 import { FormEvent, useState } from "react";
 
+type AdminPaper={id:number;title:string;status:"pending"|"approved";createdAt:string;paperUrl:string;hasImage:number};
+
 export default function PaperAdminPage() {
   const [key, setKey] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [papers,setPapers]=useState<AdminPaper[]>([]);
+  const [manageStatus,setManageStatus]=useState("");
+  async function loadPapers(){
+    if(!key){setManageStatus("请先输入管理员密钥");return;}
+    setManageStatus("正在读取审核列表…");
+    const response=await fetch("/api/reading-papers",{headers:{Authorization:`Bearer ${key}`}});const data=await response.json() as {papers?:AdminPaper[];error?:string};
+    if(!response.ok){setManageStatus(data.error||"密钥验证失败");return;}setPapers(data.papers||[]);setManageStatus("");
+  }
+  async function updatePaper(id:number,action:"approve"|"delete"){
+    const label=action==="delete"?"删除":"通过审核";
+    if(action==="delete"&&!window.confirm("确认永久删除这篇论文精读吗？"))return;
+    setManageStatus(`正在${label}…`);
+    const response=await fetch(`/api/reading-papers/${id}`,{method:action==="delete"?"DELETE":"PATCH",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:action==="delete"?undefined:JSON.stringify({status:"approved"})});
+    const data=await response.json() as {error?:string};if(!response.ok){setManageStatus(data.error||`${label}失败`);return;}await loadPapers();
+  }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setStatus("正在发布精读…");
     const form = event.currentTarget;
@@ -13,7 +30,7 @@ export default function PaperAdminPage() {
       const formData=new FormData(form);
       const response=await fetch("/api/reading-papers",{method:"POST",headers:{Authorization:`Bearer ${key}`},body:formData});
       const data=await response.json() as {error?:string}; if(!response.ok) throw new Error(data.error||"发布失败");
-      form.reset(); setStatus("上传成功，论文已出现在公开页面。");
+      form.reset(); setStatus("提交成功，论文已进入待审核列表。"); await loadPapers();
     } catch(error) { setStatus(error instanceof Error?error.message:"上传失败，请重试。"); }
     finally { setBusy(false); }
   }
@@ -32,5 +49,11 @@ export default function PaperAdminPage() {
       <button className="wide" disabled={busy}>{busy ? "正在发布…" : "发布论文精读 →"}</button>
       {status && <p className="wide form-status" role="status">{status}</p>}
     </form>
+    <section className="review-desk">
+      <div className="review-head"><div><small>ADMIN ONLY</small><h2>精读审核与管理</h2></div><button onClick={loadPapers} disabled={!key}>验证密钥并刷新</button></div>
+      {manageStatus&&<p className="manage-status" role="status">{manageStatus}</p>}
+      {!papers.length&&!manageStatus?<div className="review-empty">输入管理员密钥，点击刷新后查看待审核及已发布论文。</div>:
+      <div className="review-list">{papers.map((paper)=><article key={paper.id}><div><span className={`review-state ${paper.status}`}>{paper.status==="approved"?"已发布":"待审核"}</span><small>{new Date(paper.createdAt).toLocaleDateString("zh-CN")}{paper.hasImage?" · 含知识图":""}</small><h3>{paper.title}</h3><a href={paper.paperUrl} target="_blank" rel="noreferrer">检查论文链接 ↗</a></div><div className="review-actions">{paper.status!=="approved"&&<button onClick={()=>updatePaper(paper.id,"approve")}>通过审核</button>}<button className="danger" onClick={()=>updatePaper(paper.id,"delete")}>删除</button></div></article>)}</div>}
+    </section>
   </div></main>;
 }

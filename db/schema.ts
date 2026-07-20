@@ -32,6 +32,7 @@ export const readingPapers = sqliteTable("reading_papers", {
   paperUrl: text("paper_url").notNull().default(""),
   imageKey: text("image_key").notNull().default(""),
   imageName: text("image_name").notNull().default(""),
+  status: text("status").notNull().default("approved"),
   pdfKey: text("pdf_key").notNull(),
   pdfName: text("pdf_name").notNull(),
   pdfSize: integer("pdf_size").notNull(),
