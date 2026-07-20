@@ -26,6 +26,8 @@
 npm-debug.log*
 dev.stdout.log
 dev.stderr.log
+gh-auth.out
+gh-auth.err
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
