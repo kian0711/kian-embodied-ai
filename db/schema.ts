@@ -63,5 +63,6 @@ export const collaborators = sqliteTable("collaborators", {
   photoKey: text("photo_key").notNull(),
   photoName: text("photo_name").notNull(),
   photoPosition: text("photo_position").notNull().default("50% 20%"),
+  photoUpdatedAt: text("photo_updated_at"),
   createdAt: text("created_at").notNull(),
 });
