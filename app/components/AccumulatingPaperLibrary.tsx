@@ -1,0 +1,27 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
+type Paper = { id:number; title:string; abstract:string; authors:string; year:number; url:string; category:string; categoryLabel:string; citations:number; addedAt:string };
+type LibraryResponse = { papers:Paper[]; total:number; page:number; pages:number; lastSyncAt:string|null; addedToday:number; live:boolean };
+
+const categories = [{id:"all",label:"全部"},{id:"vla",label:"VLA 模型"},{id:"world",label:"世界模型"},{id:"practice",label:"机器人实践"},{id:"foundation",label:"基础研究"}];
+
+export function AccumulatingPaperLibrary() {
+  const [data,setData] = useState<LibraryResponse>({papers:[],total:0,page:1,pages:1,lastSyncAt:null,addedToday:0,live:false});
+  const [page,setPage] = useState(1); const [category,setCategory] = useState("all"); const [query,setQuery] = useState(""); const [input,setInput] = useState(""); const [loading,setLoading] = useState(true);
+  const load = useCallback(() => { setLoading(true); const params=new URLSearchParams({page:String(page),category,q:query}); fetch(`/api/library?${params}`).then(r=>r.json()).then(setData).finally(()=>setLoading(false)); },[page,category,query]);
+  useEffect(()=>{load()},[load]);
+  const submit=(e:React.FormEvent)=>{e.preventDefault();setPage(1);setQuery(input)};
+  const translate=(url:string)=>`https://translate.google.com/translate?sl=auto&tl=zh-CN&u=${encodeURIComponent(url)}`;
+  return <>
+    <div className="section-head paper-head"><div><p className="eyebrow"><span /> GROWING PAPER ARCHIVE</p><h2>从经典到前沿</h2><p className="archive-note">每日发现，持续累积 · 已收录 <b>{data.total}</b> 篇</p></div><form className="search" onSubmit={submit}><span>⌕</span><input value={input} onChange={e=>setInput(e.target.value)} placeholder="搜索论文、作者或主题" /></form></div>
+    <div className="library-toolbar"><div>{categories.map(item=><button key={item.id} className={category===item.id?"active":""} onClick={()=>{setCategory(item.id);setPage(1)}}>{item.label}</button>)}</div><p><i />{data.live?`今日新增 ${data.addedToday} 篇`:`论文档案已就绪`}<small>{data.lastSyncAt?`最近更新 ${new Date(data.lastSyncAt).toLocaleString("zh-CN")}`:"首次访问将自动更新"}</small></p></div>
+    <div className={`archive-list ${loading?"loading":""}`}>{data.papers.map((paper,index)=><article className="archive-paper" key={paper.id}>
+      <div className="archive-index">{String((data.page-1)*8+index+1).padStart(2,"0")}</div><div className="archive-year">{paper.year}<small>{paper.categoryLabel}</small></div><div className="archive-main"><h3>{paper.title}</h3><p>{paper.abstract||"暂无摘要，点击原文查看完整内容。"}</p><span>{paper.authors}</span></div><div className="archive-metrics"><span>引用 {paper.citations}</span><small>收录 {paper.addedAt}</small></div><div className="archive-actions"><a href={paper.url} target="_blank" rel="noreferrer">阅读原文 ↗</a><a className="translate" href={translate(paper.url)} target="_blank" rel="noreferrer">中文翻译 文</a></div>
+    </article>)}</div>
+    {!loading&&!data.papers.length&&<div className="empty-library">没有找到匹配论文，请尝试其他关键词。</div>}
+    <div className="pagination"><button disabled={page<=1} onClick={()=>setPage(p=>p-1)}>← 上一页</button><span>{data.page} / {data.pages}</span><button disabled={page>=data.pages} onClick={()=>setPage(p=>p+1)}>下一页 →</button></div>
+    <p className="paper-source">论文元数据来自 Semantic Scholar Academic Graph。每日首次访问触发增量检索，按唯一论文 ID 去重并永久累计；翻译由 Google Translate 提供。</p>
+  </>;
+}

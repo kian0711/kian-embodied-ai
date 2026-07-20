@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { AccumulatingPaperLibrary } from "./components/AccumulatingPaperLibrary";
 
 const tracks = [
   { id: "foundation", step: "01", title: "基础导航", en: "FOUNDATIONS", desc: "从具身智能的核心问题出发，建立机器人学、视觉与强化学习的共同语言。", lessons: 12, time: "6 小时", color: "violet" },
@@ -9,20 +10,10 @@ const tracks = [
   { id: "practice", step: "04", title: "机器人实践", en: "BUILD · SIMULATE · DEPLOY", desc: "在仿真环境中完成从数据采集、策略训练到真机部署的完整闭环。", lessons: 16, time: "12 小时", color: "orange" },
 ];
 
-const papers = [
-  { year: "2022", title: "RT-1: Robotics Transformer", tag: "VLA 奠基", level: "入门", institution: "Google Robotics" },
-  { year: "2023", title: "RT-2: Vision-Language-Action Models", tag: "规模化", level: "核心", institution: "Google DeepMind" },
-  { year: "2024", title: "OpenVLA: An Open-Source VLA Model", tag: "开源模型", level: "实践", institution: "Stanford · UC Berkeley" },
-  { year: "2024", title: "π₀: A Vision-Language-Action Flow Model", tag: "生成策略", level: "前沿", institution: "Physical Intelligence" },
-];
-
 export default function Home() {
   const [activeTrack, setActiveTrack] = useState("vla");
   const [done, setDone] = useState(["foundation"]);
-  const [query, setQuery] = useState("");
-  const [saved, setSaved] = useState<string[]>([]);
   const current = tracks.find((track) => track.id === activeTrack) ?? tracks[1];
-  const filteredPapers = useMemo(() => papers.filter((paper) => `${paper.title}${paper.tag}${paper.institution}`.toLowerCase().includes(query.toLowerCase())), [query]);
 
   const toggleDone = (id: string) => setDone((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
 
@@ -71,15 +62,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="papers-section" id="papers"><div className="shell">
-        <div className="section-head paper-head"><div><p className="eyebrow"><span /> READING QUEUE</p><h2>从经典到前沿</h2></div><label className="search"><span>⌕</span><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索论文、机构或主题" /></label></div>
-        <div className="papers-layout">
-          <div className="timeline-label"><span>VLA</span><p>模型演进<br />精选阅读轨</p><i /></div>
-          <div className="paper-list">{filteredPapers.map((paper, index) => <article className="paper-row" key={paper.title}>
-            <div className="paper-index">0{index + 1}</div><div className="paper-year">{paper.year}</div><div className="paper-main"><div><span>{paper.tag}</span><em>{paper.level}</em></div><h3>{paper.title}</h3><p>{paper.institution}</p></div><button aria-label={`收藏 ${paper.title}`} className={saved.includes(paper.title) ? "saved" : ""} onClick={() => setSaved((items) => items.includes(paper.title) ? items.filter((item) => item !== paper.title) : [...items, paper.title])}>{saved.includes(paper.title) ? "★" : "☆"}</button>
-          </article>)}</div>
-        </div>
-      </div></section>
+      <section className="papers-section" id="papers"><div className="shell"><AccumulatingPaperLibrary /></div></section>
 
       <section className="practice shell" id="practice">
         <div><p className="eyebrow"><span /> LEARN BY BUILDING</p><h2>让知识在机器人身上<br /><span>真正发生。</span></h2><p>从仿真到真实世界，完成你的第一个视觉语言动作闭环，并在 KIAN 的 GitHub 中查看持续更新的项目与代码。</p><div className="practice-actions"><a href="#roadmap" className="primary-btn">开始第一个实验 <b>→</b></a><a href="https://github.com/kian0711?tab=repositories" target="_blank" rel="noreferrer" className="github-link"><strong>⌘</strong><span>查看我的 GitHub<small>github.com/kian0711</small></span><b>↗</b></a></div></div>
