@@ -58,10 +58,10 @@ export default function Home() {
       <section className="roadmap shell" id="roadmap">
         <div className="section-head"><div><p className="eyebrow"><span /> YOUR LEARNING ORBIT</p><h2>四阶段学习路径</h2></div><p>无需一次读懂所有论文。沿着清晰的知识依赖，<br />从概念建立到动手部署，逐层进阶。</p></div>
         <div className="track-grid">
-          {tracks.map((track) => <button key={track.id} className={`track-card ${activeTrack === track.id ? "active" : ""} ${track.color}`} onClick={() => setActiveTrack(track.id)}>
+          {tracks.map((track) => <article key={track.id} tabIndex={0} className={`track-card ${activeTrack === track.id ? "active" : ""} ${track.color}`} onClick={() => setActiveTrack(track.id)} onKeyDown={(event) => { if(event.key === "Enter") setActiveTrack(track.id); }}>
             <div className="track-top"><span>{track.step}</span><small>{done.includes(track.id) ? "✓ 已完成" : "探索轨道 ↗"}</small></div>
-            <p>{track.en}</p><h3>{track.title}</h3><div className="track-line" /><p className="track-desc">{track.desc}</p><div className="track-meta"><span>◫ {track.lessons} 课</span><span>◷ {track.time}</span></div>
-          </button>)}
+            <p>{track.en}</p><h3>{track.title}</h3><div className="track-line" /><p className="track-desc">{track.desc}</p><div className="track-meta"><span>◫ {track.lessons} 课</span><span>◷ {track.time}</span><a href={`/learn/${track.id}`}>进入课程 →</a></div>
+          </article>)}
         </div>
         <div className="course-panel">
           <div><span className="course-no">{current.step}</span><p>当前选中轨道</p><h3>{current.title}</h3></div>
