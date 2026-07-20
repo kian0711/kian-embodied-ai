@@ -30,8 +30,8 @@ export default function Home() {
     <main>
       <nav className="nav shell" aria-label="主导航">
         <a href="#top" className="brand" aria-label="KIAN 具身智能学习站首页"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a>
-        <div className="nav-links"><a href="#roadmap">学习路径</a><a href="#papers">论文精读</a><a href="#practice">实践地图</a></div>
-        <a className="nav-cta" href="#roadmap">开始探索 <span>↗</span></a>
+        <div className="nav-links"><a href="#roadmap">学习路径</a><a href="#papers">论文精读</a><a href="#practice">实践地图</a><a href="https://github.com/kian0711?tab=repositories" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+        <a className="nav-cta github-cta" href="https://github.com/kian0711?tab=repositories" target="_blank" rel="noreferrer"><b>⌘</b> KIAN / GitHub <span>↗</span></a>
       </nav>
 
       <section className="hero shell" id="top">
@@ -82,11 +82,11 @@ export default function Home() {
       </div></section>
 
       <section className="practice shell" id="practice">
-        <div><p className="eyebrow"><span /> LEARN BY BUILDING</p><h2>让知识在机器人身上<br /><span>真正发生。</span></h2><p>从仿真到真实世界，完成你的第一个视觉语言动作闭环。</p><a href="#roadmap" className="primary-btn">开始第一个实验 <b>→</b></a></div>
+        <div><p className="eyebrow"><span /> LEARN BY BUILDING</p><h2>让知识在机器人身上<br /><span>真正发生。</span></h2><p>从仿真到真实世界，完成你的第一个视觉语言动作闭环，并在 KIAN 的 GitHub 中查看持续更新的项目与代码。</p><div className="practice-actions"><a href="#roadmap" className="primary-btn">开始第一个实验 <b>→</b></a><a href="https://github.com/kian0711?tab=repositories" target="_blank" rel="noreferrer" className="github-link"><strong>⌘</strong><span>查看我的 GitHub<small>github.com/kian0711</small></span><b>↗</b></a></div></div>
         <div className="pipeline"><div><b>01</b><span>看见</span><small>Vision</small></div><i>→</i><div><b>02</b><span>理解</span><small>Language</small></div><i>→</i><div><b>03</b><span>规划</span><small>Policy</small></div><i>→</i><div><b>04</b><span>行动</span><small>Action</small></div></div>
       </section>
 
-      <footer className="shell"><a href="#top" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>让知识拥有身体，让智能走进真实世界。</p><span>© 2026 KIAN · LEARN, BUILD, EMBODY.</span></footer>
+      <footer className="shell"><a href="#top" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>让知识拥有身体，让智能走进真实世界。</p><a className="footer-github" href="https://github.com/kian0711?tab=repositories" target="_blank" rel="noreferrer"><b>⌘</b> github.com/kian0711 ↗</a><span>© 2026 KIAN</span></footer>
     </main>
   );
 }
