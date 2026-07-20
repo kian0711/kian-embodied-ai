@@ -21,7 +21,7 @@ export function SiteInfoBar() {
   return (
     <aside className="site-info-bar" aria-label="网站信息">
       <div className="shell">
-        <span className="view-count"><i />访问浏览次数 <b>{views === null ? "—" : views.toLocaleString("zh-CN")}</b></span>
+        <span className="view-count"><i />独立访问人数 <b>{views === null ? "—" : views.toLocaleString("zh-CN")}</b></span>
         <span>抖音号 <b>kian0711</b></span>
         <span>微信号 <b>kian060701</b></span>
       </div>

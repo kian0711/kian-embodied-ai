@@ -48,6 +48,12 @@ export const siteViews = sqliteTable("site_views", {
   updatedAt: text("updated_at").notNull(),
 });
 
+export const siteVisitors = sqliteTable("site_visitors", {
+  ipHash: text("ip_hash").primaryKey(),
+  firstSeenAt: text("first_seen_at").notNull(),
+  lastSeenAt: text("last_seen_at").notNull(),
+});
+
 export const collaborators = sqliteTable("collaborators", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
