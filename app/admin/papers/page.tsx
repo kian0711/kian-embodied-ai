@@ -6,33 +6,14 @@ export default function PaperAdminPage() {
   const [key, setKey] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  async function json(response: Response) {
-    const text = await response.text();
-    try { return JSON.parse(text) as Record<string, unknown>; }
-    catch { throw new Error(response.status === 413 ? "文件超过单次上传限制" : `服务器返回错误（${response.status}）`); }
-  }
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setStatus("正在准备上传…");
+    event.preventDefault(); setBusy(true); setStatus("正在发布精读…");
     const form = event.currentTarget;
     try {
-      const formData=new FormData(form); const pdf=formData.get("pdf");
-      if(!(pdf instanceof File)) throw new Error("请选择 PDF 文件");
-      if(pdf.size>50*1024*1024) throw new Error("PDF 不能超过 50MB");
-      const auth={Authorization:`Bearer ${key}`};
-      const initResponse=await fetch("/api/reading-papers/upload",{method:"POST",headers:{...auth,"Content-Type":"application/json"},body:JSON.stringify({action:"init",name:pdf.name,size:pdf.size})});
-      const init=await json(initResponse); if(!initResponse.ok) throw new Error(String(init.error||"无法开始上传"));
-      const chunkSize=4*1024*1024; const total=Math.ceil(pdf.size/chunkSize); const parts:{partNumber:number;etag:string}[]=[];
-      for(let index=0;index<total;index++){
-        setStatus(`正在上传 PDF：${index+1} / ${total}`);
-        const url=`/api/reading-papers/upload?key=${encodeURIComponent(String(init.key))}&uploadId=${encodeURIComponent(String(init.uploadId))}&partNumber=${index+1}`;
-        const partResponse=await fetch(url,{method:"PUT",headers:auth,body:pdf.slice(index*chunkSize,Math.min(pdf.size,(index+1)*chunkSize))});
-        const part=await json(partResponse); if(!partResponse.ok) throw new Error(String(part.error||"PDF 分片上传失败"));
-        parts.push({partNumber:Number(part.partNumber),etag:String(part.etag)});
-      }
-      setStatus("PDF 已上传，正在保存精读内容…");
-      const completeBody=Object.fromEntries(["title","innovation","method","result","implementation"].map((name)=>[name,String(formData.get(name)||"")]));
-      const completeResponse=await fetch("/api/reading-papers/upload",{method:"POST",headers:{...auth,"Content-Type":"application/json"},body:JSON.stringify({action:"complete",key:init.key,uploadId:init.uploadId,name:pdf.name,size:pdf.size,parts,...completeBody})});
-      const complete=await json(completeResponse); if(!completeResponse.ok) throw new Error(String(complete.error||"保存失败"));
+      const formData=new FormData(form);
+      const body=Object.fromEntries(["title","innovation","method","result","implementation","paperUrl"].map((name)=>[name,String(formData.get(name)||"")]));
+      const response=await fetch("/api/reading-papers",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
+      const data=await response.json() as {error?:string}; if(!response.ok) throw new Error(data.error||"发布失败");
       form.reset(); setStatus("上传成功，论文已出现在公开页面。");
     } catch(error) { setStatus(error instanceof Error?error.message:"上传失败，请重试。"); }
     finally { setBusy(false); }
@@ -47,7 +28,7 @@ export default function PaperAdminPage() {
       <label>方法<textarea name="method" required maxLength={6000} placeholder="模型、数据、训练方式和关键技术路线" /></label>
       <label>结果<textarea name="result" required maxLength={6000} placeholder="实验结果、指标提升和重要结论" /></label>
       <label>可以实现的途径<textarea name="implementation" required maxLength={6000} placeholder="如何复现、需要哪些工具和具体步骤" /></label>
-      <label className="wide file-field">完整论文 PDF<input name="pdf" type="file" accept="application/pdf,.pdf" required /><small>仅支持 PDF，最大 50MB；大文件会自动分片上传</small></label>
+      <label className="wide">论文链接<input name="paperUrl" type="url" required placeholder="https://arxiv.org/abs/... 或论文官网链接" /></label>
       <button className="wide" disabled={busy}>{busy ? "正在发布…" : "发布论文精读 →"}</button>
       {status && <p className="wide form-status" role="status">{status}</p>}
     </form>

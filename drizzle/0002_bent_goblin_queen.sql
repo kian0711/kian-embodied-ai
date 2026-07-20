@@ -1,0 +1,1 @@
+ALTER TABLE `reading_papers` ADD `paper_url` text DEFAULT '' NOT NULL;
