@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AccumulatingPaperLibrary } from "./components/AccumulatingPaperLibrary";
 import { MyPaperLibrary } from "./components/MyPaperLibrary";
-import { SiteFooter } from "./components/SiteFooter";
+import { SiteFooter, SiteInfoBar } from "./components/SiteFooter";
 import { CollaboratorSection } from "./components/CollaboratorSection";
 
 const tracks = [
@@ -22,6 +22,7 @@ export default function Home() {
 
   return (
     <main>
+      <SiteInfoBar />
       <nav className="nav shell" aria-label="主导航">
         <a href="#top" className="brand" aria-label="KIAN 具身智能学习站首页"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a>
         <div className="nav-links"><a href="#roadmap">学习路径</a><a href="#papers">论文图谱</a><a href="#my-papers">我的精读</a><a href="#collaboration">合作共创</a><a href="#practice">实践地图</a></div>
