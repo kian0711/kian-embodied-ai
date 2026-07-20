@@ -69,6 +69,21 @@ export default function Home() {
         <div className="pipeline"><div><b>01</b><span>看见</span><small>Vision</small></div><i>→</i><div><b>02</b><span>理解</span><small>Language</small></div><i>→</i><div><b>03</b><span>规划</span><small>Policy</small></div><i>→</i><div><b>04</b><span>行动</span><small>Action</small></div></div>
       </section>
 
+      <section className="community shell" id="community">
+        <div className="community-copy">
+          <p className="eyebrow"><span /> KIAN LEARNING COMMUNITY</p>
+          <h2>欢迎大家进群交流，<br /><span>一起维护学习网址。</span></h2>
+          <p>这里不仅是一份课程，也是一群具身智能学习者共同生长的知识库。欢迎分享论文、学习笔记、机器人实践经验和课程建议，让内容持续变得更准确、更好懂。</p>
+          <div className="community-points"><span>论文共读</span><span>问题交流</span><span>实践互助</span><span>共同维护</span></div>
+          <small>微信扫码加入「具身智能机器人交流群 3」</small>
+        </div>
+        <figure className="community-qr">
+          <div className="qr-glow" />
+          <img src="/kian-wechat-group-20260720.jpg" alt="具身智能机器人交流群 3 微信群二维码" />
+          <figcaption><b>扫码加入交流群</b><span>二维码有效期至 2026 年 7 月 27 日，失效后将及时更新</span></figcaption>
+        </figure>
+      </section>
+
       <footer className="shell"><a href="#top" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>原创课程内容，未经书面授权禁止复制、转载或商用。<a className="copyright-link" href="/copyright">版权声明</a></p><span>© 2026 KIAN · ALL RIGHTS RESERVED.</span></footer>
     </main>
   );
