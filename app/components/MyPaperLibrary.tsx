@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type ReadingPaper = { id:number; title:string; innovation:string; method:string; result:string; implementation:string; paperUrl:string; hasImage:number; createdAt:string };
+type ReadingPaper = { id:number; title:string; innovation:string; method:string; result:string; implementation:string; contributorName:string; contributorSchool:string; contributorWechat:string; paperUrl:string; hasImage:number; createdAt:string };
 
 export function MyPaperLibrary() {
   const [papers, setPapers] = useState<ReadingPaper[]>([]);
@@ -16,6 +16,7 @@ export function MyPaperLibrary() {
         <div className="reading-detail">
           {Boolean(paper.hasImage) && <figure className="paper-visual"><img src={`/api/reading-papers/${paper.id}/image`} alt={`一张图了解《${paper.title}》`} /><figcaption>一张图了解这篇论文</figcaption></figure>}
           <div className="reading-insights"><div><small>01 · INNOVATION</small><b>创新点</b><p>{paper.innovation}</p></div><div><small>02 · METHOD</small><b>方法</b><p>{paper.method}</p></div><div><small>03 · RESULT</small><b>结果</b><p>{paper.result}</p></div><div><small>04 · IMPLEMENTATION</small><b>实现途径</b><p>{paper.implementation}</p></div></div>
+          {(paper.contributorName || paper.contributorSchool || paper.contributorWechat) && <aside className="paper-contributor"><small>SHARED BY</small><div><b>{paper.contributorName || "热心分享者"}</b>{paper.contributorSchool && <span>{paper.contributorSchool}</span>}{paper.contributorWechat && <span>微信：{paper.contributorWechat}</span>}</div></aside>}
           <a className="reading-source" href={paper.paperUrl} target="_blank" rel="noreferrer">打开论文原文 ↗</a>
         </div>
       </details>)}</div>}

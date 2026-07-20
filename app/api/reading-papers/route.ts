@@ -10,6 +10,9 @@ async function ensureTable(db: D1Database) {
     method TEXT NOT NULL,
     result TEXT NOT NULL,
     implementation TEXT NOT NULL,
+    contributor_name TEXT NOT NULL DEFAULT '',
+    contributor_school TEXT NOT NULL DEFAULT '',
+    contributor_wechat TEXT NOT NULL DEFAULT '',
     paper_url TEXT NOT NULL DEFAULT '',
     image_key TEXT NOT NULL DEFAULT '',
     image_name TEXT NOT NULL DEFAULT '',
@@ -32,7 +35,9 @@ export async function GET(request:NextRequest) {
     const db = getD1();
     await ensureTable(db);
     const admin=isAdmin(request); const where=admin?"":"WHERE status = 'approved'";
-    const rows = await db.prepare(`SELECT id,title,innovation,method,result,implementation,paper_url AS paperUrl,status,
+    const rows = await db.prepare(`SELECT id,title,innovation,method,result,implementation,
+      contributor_name AS contributorName, contributor_school AS contributorSchool, contributor_wechat AS contributorWechat,
+      paper_url AS paperUrl,status,
       CASE WHEN image_key <> '' THEN 1 ELSE 0 END AS hasImage,
       created_at AS createdAt
       FROM reading_papers ${where} ORDER BY created_at DESC, id DESC`).all();
@@ -50,6 +55,12 @@ export async function POST(request: NextRequest) {
     const values = Object.fromEntries(fields.map((field) => [field, String(form.get(field) || "").trim()])) as Record<typeof fields[number], string>;
     if (fields.some((field) => !values[field])) return NextResponse.json({ error: "请填写全部精读内容" }, { status: 400 });
     if (fields.some((field) => values[field].length > 6000)) return NextResponse.json({ error: "单项内容不能超过 6000 字" }, { status: 400 });
+    const contributorName = String(form.get("contributorName") || "").trim();
+    const contributorSchool = String(form.get("contributorSchool") || "").trim();
+    const contributorWechat = String(form.get("contributorWechat") || "").trim();
+    if (contributorName.length > 60 || contributorSchool.length > 120 || contributorWechat.length > 80) {
+      return NextResponse.json({ error: "投稿者信息过长，请适当精简" }, { status: 400 });
+    }
     const paperUrl = String(form.get("paperUrl") || "").trim();
     try { const parsed = new URL(paperUrl); if (!/^https?:$/.test(parsed.protocol)) throw new Error(); }
     catch { return NextResponse.json({ error: "请输入有效的 http 或 https 论文链接" }, { status: 400 }); }
@@ -70,8 +81,8 @@ export async function POST(request: NextRequest) {
     const createdAt = new Date().toISOString();
     try {
       const inserted = await db.prepare(`INSERT INTO reading_papers
-        (title,innovation,method,result,implementation,paper_url,image_key,image_name,status,pdf_key,pdf_name,pdf_size,created_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id`).bind(values.title, values.innovation, values.method, values.result, values.implementation, paperUrl, imageKey, imageName, "pending", "", "", 0, createdAt).first<{ id: number }>();
+        (title,innovation,method,result,implementation,contributor_name,contributor_school,contributor_wechat,paper_url,image_key,image_name,status,pdf_key,pdf_name,pdf_size,created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id`).bind(values.title, values.innovation, values.method, values.result, values.implementation, contributorName, contributorSchool, contributorWechat, paperUrl, imageKey, imageName, "pending", "", "", 0, createdAt).first<{ id: number }>();
       return NextResponse.json({ ok: true, id: inserted?.id, status:"pending" }, { status: 201 });
     } catch(error) { if(imageKey && env.FILES) await env.FILES.delete(imageKey); throw error; }
   } catch (error) {

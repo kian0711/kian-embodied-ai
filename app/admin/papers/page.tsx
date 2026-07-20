@@ -50,6 +50,12 @@ export default function PaperAdminPage() {
     <form onSubmit={submit} className="paper-form">
       <label>管理员密钥<input type="password" value={key} onChange={(event)=>setKey(event.target.value)} required autoComplete="current-password" /></label>
       <label className="wide">论文标题<input name="title" required maxLength={300} placeholder="输入论文的完整标题" /></label>
+      <div className="wide contributor-fields">
+        <div className="contributor-intro"><b>留下你的名字</b><span>以下信息均可选；填写后会公开展示在论文精读下方，让大家记住这份分享来自谁。</span></div>
+        <label>姓名<input name="contributorName" maxLength={60} placeholder="你的姓名或昵称" /></label>
+        <label>学校<input name="contributorSchool" maxLength={120} placeholder="学校 / 学院 / 实验室" /></label>
+        <label>微信号<input name="contributorWechat" maxLength={80} placeholder="愿意公开交流时再填写" /></label>
+      </div>
       <label>创新点<textarea name="innovation" required maxLength={6000} placeholder="这篇论文解决了什么新问题？核心贡献是什么？" /></label>
       <label>方法<textarea name="method" required maxLength={6000} placeholder="模型、数据、训练方式和关键技术路线" /></label>
       <label>结果<textarea name="result" required maxLength={6000} placeholder="实验结果、指标提升和重要结论" /></label>
