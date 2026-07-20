@@ -1,0 +1,3 @@
+import { OpenProjectSection } from "../components/OpenProjectSection";
+import { SiteFooter,SiteInfoBar } from "../components/SiteFooter";
+export default function ProjectsPage(){return <main><SiteInfoBar/><nav className="nav shell"><a href="/" className="brand"><span className="brand-mark">K<i/></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><div className="nav-links"><a href="/">学习首页</a><a href="/papers">论文图谱</a><a href="/collaboration">合作共创</a></div><a className="nav-cta" href="/">返回首页 <span>↗</span></a></nav><header className="portal-hero shell"><p className="eyebrow"><span/> BUILD · SHARE · BE REMEMBERED</p><h1>优秀开源项目</h1><p>分享值得学习与复现的项目，让每一位贡献者被看见、被记住。</p></header><OpenProjectSection/><SiteFooter/></main>}

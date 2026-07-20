@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AccumulatingPaperLibrary } from "./components/AccumulatingPaperLibrary";
 import { MyPaperLibrary } from "./components/MyPaperLibrary";
 import { SiteFooter, SiteInfoBar } from "./components/SiteFooter";
-import { CollaboratorSection } from "./components/CollaboratorSection";
-import { OpenProjectSection } from "./components/OpenProjectSection";
 
 const tracks = [
   { id: "foundation", step: "01", title: "基础导航", en: "FOUNDATIONS", desc: "从具身智能的核心问题出发，建立机器人学、视觉与强化学习的共同语言。", lessons: 12, time: "6 小时", color: "violet" },
@@ -26,7 +23,7 @@ export default function Home() {
       <SiteInfoBar />
       <nav className="nav shell" aria-label="主导航">
         <a href="#top" className="brand" aria-label="KIAN 具身智能学习站首页"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a>
-        <div className="nav-links"><a href="#roadmap">学习路径</a><a href="#papers">论文图谱</a><a href="#my-papers">我的精读</a><a href="#open-projects">开源项目</a><a href="#collaboration">合作共创</a></div>
+        <div className="nav-links"><a href="#roadmap">学习路径</a><a href="/papers">论文图谱</a><a href="#my-papers">我的精读</a><a href="/projects">开源项目</a><a href="/collaboration">合作共创</a></div>
         <a className="nav-cta" href="#roadmap">开始探索 <span>↗</span></a>
       </nav>
 
@@ -35,7 +32,7 @@ export default function Home() {
           <p className="eyebrow"><span /> SYSTEMATIC LEARNING PATH · 2026</p>
           <h1>从感知到行动，<br />系统掌握<span>具身智能</span></h1>
           <p className="hero-lead">一张为学习者打造的研究星图。循序掌握基础理论、VLA 模型、世界模型与机器人实践，把零散论文连接成完整知识体系。</p>
-          <div className="hero-actions"><a className="primary-btn" href="#roadmap">进入学习路径 <b>→</b></a><a className="text-btn" href="#papers"><i>▶</i> 浏览论文图谱</a></div>
+          <div className="hero-actions"><a className="primary-btn" href="#roadmap">进入学习路径 <b>→</b></a><a className="text-btn" href="/papers"><i>▶</i> 浏览论文图谱</a></div>
           <div className="hero-stats"><div><strong>4</strong><span>阶段路径</span></div><div><strong>60</strong><span>节精选课程</span></div><div><strong>36h</strong><span>完整学习时长</span></div></div>
         </div>
         <div className="atlas" aria-label="具身智能知识图谱示意">
@@ -67,13 +64,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="papers-section" id="papers"><div className="shell"><AccumulatingPaperLibrary /></div></section>
-
       <MyPaperLibrary />
-
-      <OpenProjectSection />
-
-      <CollaboratorSection />
 
       <section className="practice shell" id="practice">
         <div><p className="eyebrow"><span /> LEARN BY BUILDING</p><h2>让知识在机器人身上<br /><span>真正发生。</span></h2><p>从仿真到真实世界，完成你的第一个视觉语言动作闭环。</p><a href="#roadmap" className="primary-btn">开始第一个实验 <b>→</b></a></div>
