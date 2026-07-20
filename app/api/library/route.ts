@@ -22,17 +22,17 @@ async function dailySync(db:D1Database) {
   const seedResults=await db.batch(classicPapers.map(paper=>db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,paper.abstract,paper.authors,paper.year,null,paper.url,paper.category,paper.categoryLabel,0,today)));
   const seeded=seedResults.reduce((sum,result)=>sum+Number(result.meta.changes??0),0);
   const existing=await db.prepare("SELECT last_sync_date FROM paper_sync WHERE id = ?").bind("global").first<{last_sync_date:string}>();
-  const countRow=await db.prepare("SELECT COUNT(*) AS total FROM papers").first<{total:number}>(); let currentTotal=Number(countRow?.total??0); const bootstrap=currentTotal<50;
+  const countRow=await db.prepare("SELECT COUNT(*) AS total FROM papers").first<{total:number}>(); let currentTotal=Number(countRow?.total??0); const bootstrap=currentTotal<100;
   if(existing?.last_sync_date===today&&!bootstrap){if(seeded)await db.prepare("UPDATE paper_sync SET added_count = added_count + ? WHERE id = ?").bind(seeded,"global").run();return {live:true,added:seeded};}
   let added=seeded; let reachedTarget=false;
   for(const feed of feeds){
     try{
       const fields="title,abstract,year,authors,url,citationCount,publicationDate";
-      const url=`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(feed.query)}&limit=${bootstrap?100:16}&fields=${fields}`;
+      const url=`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(feed.query)}&year=2023-2026&limit=${bootstrap?100:16}&fields=${fields}`;
       const response=await fetch(url,{headers:{"User-Agent":"KIAN-Embodied-AI-Learning/1.0"}}); if(!response.ok) continue;
       const result=await response.json() as {data?:Array<{paperId:string;title:string;abstract?:string;year?:number;authors?:Array<{name:string}>;url?:string;citationCount?:number;publicationDate?:string}>};
-      const selected=(result.data??[]).filter(p=>p.paperId&&p.title&&p.year&&p.year>=2020&&p.year<=2026).sort((a,b)=>(b.citationCount??0)-(a.citationCount??0)).slice(0,bootstrap?30:4);
-      for(const paper of selected){if(bootstrap&&currentTotal>=50){reachedTarget=true;break} const outcome=await db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,paper.url??`https://www.semanticscholar.org/paper/${paper.paperId}`,feed.category,feed.label,paper.citationCount??0,today).run(); if(outcome.meta.changes){const changes=Number(outcome.meta.changes);added+=changes;currentTotal+=changes}}
+      const selected=(result.data??[]).filter(p=>p.paperId&&p.title&&p.year&&p.year>=2023&&p.year<=2026).sort((a,b)=>(b.year??0)-(a.year??0)||String(b.publicationDate??"").localeCompare(String(a.publicationDate??""))||(b.citationCount??0)-(a.citationCount??0)).slice(0,bootstrap?40:4);
+      for(const paper of selected){if(bootstrap&&currentTotal>=100){reachedTarget=true;break} const outcome=await db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,paper.url??`https://www.semanticscholar.org/paper/${paper.paperId}`,feed.category,feed.label,paper.citationCount??0,today).run(); if(outcome.meta.changes){const changes=Number(outcome.meta.changes);added+=changes;currentTotal+=changes}}
       if(reachedTarget) break;
     }catch{continue}
   }
@@ -43,10 +43,10 @@ async function dailySync(db:D1Database) {
 export async function GET(request:NextRequest){
   try{
     const db=getD1(); await ensureTables(db); const sync=await dailySync(db);
-    const page=Math.max(1,Number(request.nextUrl.searchParams.get("page")||1)); const limit=8; const offset=(page-1)*limit; const category=request.nextUrl.searchParams.get("category")||"all"; const q=(request.nextUrl.searchParams.get("q")||"").trim();
-    const clauses:string[]=[]; const values:(string|number)[]=[]; if(category!=="all"){clauses.push("category = ?");values.push(category)} if(q){clauses.push("(title LIKE ? OR abstract LIKE ? OR authors LIKE ?)");const like=`%${q}%`;values.push(like,like,like)} const where=clauses.length?`WHERE ${clauses.join(" AND ")}`:"";
+    const page=Math.max(1,Number(request.nextUrl.searchParams.get("page")||1)); const limit=8; const offset=(page-1)*limit; const category=request.nextUrl.searchParams.get("category")||"all"; const year=request.nextUrl.searchParams.get("year")||"all"; const q=(request.nextUrl.searchParams.get("q")||"").trim();
+    const clauses:string[]=[]; const values:(string|number)[]=[]; if(category!=="all"){clauses.push("category = ?");values.push(category)} if(year!=="all"){clauses.push("year = ?");values.push(Number(year))} if(q){clauses.push("(title LIKE ? OR abstract LIKE ? OR authors LIKE ?)");const like=`%${q}%`;values.push(like,like,like)} const where=clauses.length?`WHERE ${clauses.join(" AND ")}`:"";
     const count=await db.prepare(`SELECT COUNT(*) AS total FROM papers ${where}`).bind(...values).first<{total:number}>(); const total=Number(count?.total??0);
-    const rows=await db.prepare(`SELECT id,title,abstract,authors,year,url,category,category_label AS categoryLabel,citations,added_at AS addedAt FROM papers ${where} ORDER BY year DESC, citations DESC, id DESC LIMIT ? OFFSET ?`).bind(...values,limit,offset).all();
+    const rows=await db.prepare(`SELECT id,title,abstract,authors,year,url,category,category_label AS categoryLabel,citations,added_at AS addedAt FROM papers ${where} ORDER BY year DESC, COALESCE(published_at,'') DESC, citations DESC, id DESC LIMIT ? OFFSET ?`).bind(...values,limit,offset).all();
     const status=await db.prepare("SELECT last_sync_at AS lastSyncAt, added_count AS addedToday FROM paper_sync WHERE id = ?").bind("global").first<{lastSyncAt:string;addedToday:number}>();
     return NextResponse.json({papers:rows.results,total,page,pages:Math.max(1,Math.ceil(total/limit)),lastSyncAt:status?.lastSyncAt??null,addedToday:status?.addedToday??sync.added,live:sync.live},{headers:{"Cache-Control":"no-store"}});
   }catch(error){return NextResponse.json({papers:[],total:0,page:1,pages:1,lastSyncAt:null,addedToday:0,live:false,error:error instanceof Error?error.message:"unavailable"});}
