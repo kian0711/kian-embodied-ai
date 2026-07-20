@@ -1,77 +1,38 @@
-"use client";
-
-import { useState } from "react";
 import { MyPaperLibrary } from "./components/MyPaperLibrary";
-import { SiteFooter, SiteInfoBar } from "./components/SiteFooter";
+import { SiteFooter } from "./components/SiteFooter";
 
-const tracks = [
-  { id: "foundation", step: "01", title: "基础导航", en: "FOUNDATIONS", desc: "从具身智能的核心问题出发，建立机器人学、视觉与强化学习的共同语言。", lessons: 12, time: "6 小时", color: "violet" },
-  { id: "vla", step: "02", title: "VLA 模型", en: "VISION · LANGUAGE · ACTION", desc: "沿 RT-1、RT-2、OpenVLA 到 π0，理解视觉—语言—动作模型的演进。", lessons: 18, time: "10 小时", color: "lime" },
-  { id: "world", step: "03", title: "世界模型", en: "WORLD · ACTION MODELS", desc: "学习预测未来状态与动作的模型，理解机器人的想象、规划与决策。", lessons: 14, time: "8 小时", color: "blue" },
-  { id: "practice", step: "04", title: "机器人实践", en: "BUILD · SIMULATE · DEPLOY", desc: "在仿真环境中完成从数据采集、策略训练到真机部署的完整闭环。", lessons: 16, time: "12 小时", color: "orange" },
+const features = [
+  { icon: "01", title: "免费学习", text: "所有公开课程、项目和论文解读均免费开放，不设会员与付费门槛。" },
+  { icon: "02", title: "开放分享", text: "每位同学都可以上传项目、论文解读、学习笔记和技术经验。" },
+  { icon: "03", title: "共同建设", text: "累计完成 10 次有效贡献，可以申请成为平台共创者。" },
 ];
 
+const directions = ["ROS 2", "移动机器人", "机械臂", "四足机器人", "无人机", "具身智能", "SLAM", "强化学习"];
+
 export default function Home() {
-  const [activeTrack, setActiveTrack] = useState("vla");
-  const [done, setDone] = useState(["foundation"]);
-  const current = tracks.find((track) => track.id === activeTrack) ?? tracks[1];
+  return <main className="home-modern" id="top">
+    <header className="public-nav"><div className="public-shell">
+      <a className="public-brand" href="#top"><span>R</span><div><b>ROBOT COMMONS</b><small>机器人公益学习平台</small></div></a>
+      <nav aria-label="主导航"><a href="#top">首页</a><a href="#roadmap">学习路线</a><a href="/papers">论文图谱</a><a href="#my-papers">论文解读</a><a href="/projects">开源项目</a><a href="/collaboration">合作共创</a></nav>
+      <details className="mobile-menu"><summary>浏览模块</summary><nav aria-label="移动端模块导航"><a href="#roadmap">学习路线</a><a href="/papers">论文图谱</a><a href="#my-papers">论文解读</a><a href="/projects">开源项目</a><a href="/collaboration">合作共创</a></nav></details>
+      <a className="nav-upload" href="#upload">上传作品</a>
+    </div></header>
 
-  const toggleDone = (id: string) => setDone((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]);
+    <section className="public-hero public-shell">
+      <div className="public-hero-copy"><p className="public-kicker"><i /> 公益 · 免费 · 开放</p><h1>机器人学习，<br /><span>不应该有门槛</span></h1><p>这是一个由机器人学习者共同建设的公益平台。所有公开内容免费开放，让知识被分享，让优秀作品被看见。</p><div className="public-actions"><a className="blue-btn" href="#roadmap">开始学习 <b>→</b></a><a className="outline-btn" href="/projects">浏览项目</a><a className="text-link" href="#upload">上传作品 ↗</a></div><div className="public-promise"><span>✓ 永久免费</span><span>✓ 可匿名发布</span><span>✓ 审核后公开展示</span></div></div>
+      <div className="robot-board" aria-label="机器人学习社区方向示意"><div className="board-grid" /><div className="board-head"><span>OPEN LEARNING NETWORK</span><i>LIVE</i></div><div className="robot-core"><span>ROBOT</span><b>学习共同体</b><small>LEARN · BUILD · SHARE</small></div>{directions.map((item,index)=><span className={`topic topic-${index+1}`} key={item}>{item}</span>)}<div className="board-foot"><span>01 学习</span><i>→</i><span>02 实践</span><i>→</i><span>03 分享</span></div></div>
+    </section>
 
-  return (
-    <main>
-      <SiteInfoBar />
-      <nav className="nav shell" aria-label="主导航">
-        <a href="#top" className="brand" aria-label="KIAN 具身智能学习站首页"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a>
-        <div className="nav-links"><a href="#roadmap">学习路径</a><a href="/papers">论文图谱</a><a href="#my-papers">我的精读</a><a href="/projects">开源项目</a><a href="/collaboration">合作共创</a></div>
-        <a className="nav-cta" href="#roadmap">开始探索 <span>↗</span></a>
-      </nav>
+    <section className="public-features public-shell" id="about">{features.map(feature=><article key={feature.title}><span>{feature.icon}</span><div><h2>{feature.title}</h2><p>{feature.text}</p></div></article>)}</section>
 
-      <section className="hero shell" id="top">
-        <div className="hero-copy">
-          <p className="eyebrow"><span /> SYSTEMATIC LEARNING PATH · 2026</p>
-          <h1>从感知到行动，<br />系统掌握<span>具身智能</span></h1>
-          <p className="hero-lead">一张为学习者打造的研究星图。循序掌握基础理论、VLA 模型、世界模型与机器人实践，把零散论文连接成完整知识体系。</p>
-          <div className="hero-actions"><a className="primary-btn" href="#roadmap">进入学习路径 <b>→</b></a><a className="text-btn" href="/papers"><i>▶</i> 浏览论文图谱</a></div>
-          <div className="hero-stats"><div><strong>4</strong><span>阶段路径</span></div><div><strong>60</strong><span>节精选课程</span></div><div><strong>36h</strong><span>完整学习时长</span></div></div>
-        </div>
-        <div className="atlas" aria-label="具身智能知识图谱示意">
-          <div className="atlas-label"><span>LEARNING ATLAS</span><b>四阶知识坐标</b></div>
-          <div className="orbit orbit-1" /><div className="orbit orbit-2" /><div className="orbit orbit-3" />
-          <button className="node node-center" onClick={() => setActiveTrack("vla")}><small>CORE</small>具身智能</button>
-          <button className="node node-a" onClick={() => setActiveTrack("foundation")}><span>01</span>基础</button>
-          <button className="node node-b" onClick={() => setActiveTrack("vla")}><span>02</span>VLA</button>
-          <button className="node node-c" onClick={() => setActiveTrack("world")}><span>03</span>世界模型</button>
-          <button className="node node-d" onClick={() => setActiveTrack("practice")}><span>04</span>实践</button>
-          <div className="signal-dot dot-1" /><div className="signal-dot dot-2" />
-          <p className="atlas-caption">感知 → 语言 → 规划 → 动作</p>
-        </div>
-      </section>
+    <section className="learning-preview" id="roadmap"><div className="public-shell"><div className="public-section-head"><div><p>STRUCTURED LEARNING</p><h2>从入门到实践的学习路线</h2></div><a href="/learn/foundation">查看完整路线 →</a></div><div className="learning-steps"><article><span>01</span><b>机器人基础</b><p>运动学、控制与机器人系统的共同语言</p></article><article><span>02</span><b>ROS 与感知</b><p>搭建机器人软件系统，理解视觉与定位</p></article><article><span>03</span><b>具身智能</b><p>VLA、世界模型、强化学习与策略训练</p></article><article><span>04</span><b>项目实践</b><p>从仿真复现到真实机器人部署</p></article></div></div></section>
 
-      <section className="roadmap shell" id="roadmap">
-        <div className="section-head"><div><p className="eyebrow"><span /> YOUR LEARNING ORBIT</p><h2>四阶段学习路径</h2></div><p>无需一次读懂所有论文。沿着清晰的知识依赖，<br />从概念建立到动手部署，逐层进阶。</p></div>
-        <div className="track-grid">
-          {tracks.map((track) => <article key={track.id} tabIndex={0} className={`track-card ${activeTrack === track.id ? "active" : ""} ${track.color}`} onClick={() => setActiveTrack(track.id)} onKeyDown={(event) => { if(event.key === "Enter") setActiveTrack(track.id); }}>
-            <div className="track-top"><span>{track.step}</span><small>{done.includes(track.id) ? "✓ 已完成" : "探索轨道 ↗"}</small></div>
-            <p>{track.en}</p><h3>{track.title}</h3><div className="track-line" /><p className="track-desc">{track.desc}</p><div className="track-meta"><span>◫ {track.lessons} 课</span><span>◷ {track.time}</span><a href={`/learn/${track.id}`}>进入课程 →</a></div>
-          </article>)}
-        </div>
-        <div className="course-panel">
-          <div><span className="course-no">{current.step}</span><p>当前选中轨道</p><h3>{current.title}</h3></div>
-          <p>{current.desc}</p>
-          <button onClick={() => toggleDone(current.id)}>{done.includes(current.id) ? "撤销完成" : "标记为已完成"}</button>
-          <div className="progress-block"><span>你的路线进度 <b>{Math.round(done.length / tracks.length * 100)}%</b></span><div className="progress"><i style={{ width: `${done.length / tracks.length * 100}%` }} /></div></div>
-        </div>
-      </section>
+    <MyPaperLibrary />
 
-      <MyPaperLibrary />
+    <section className="contribution-rule"><div className="public-shell"><span>10</span><div><p>CO-CREATOR RULE</p><h2>完成 10 次有效贡献，申请成为共创者</h2><p>共创者代表持续参与平台建设，不代表技术水平排名。你可以自愿展示头像、昵称、学校、研究方向、贡献次数和代表项目。</p></div><a href="/collaboration">了解共创计划 →</a></div></section>
 
-      <section className="practice shell" id="practice">
-        <div><p className="eyebrow"><span /> LEARN BY BUILDING</p><h2>让知识在机器人身上<br /><span>真正发生。</span></h2><p>从仿真到真实世界，完成你的第一个视觉语言动作闭环。</p><a href="#roadmap" className="primary-btn">开始第一个实验 <b>→</b></a></div>
-        <div className="pipeline"><div><b>01</b><span>看见</span><small>Vision</small></div><i>→</i><div><b>02</b><span>理解</span><small>Language</small></div><i>→</i><div><b>03</b><span>规划</span><small>Policy</small></div><i>→</i><div><b>04</b><span>行动</span><small>Action</small></div></div>
-      </section>
+    <section className="upload-callout public-shell" id="upload"><div><p>SHARE YOUR WORK</p><h2>让你的作品被更多人看到</h2><span>分享项目、论文解读、学习笔记、项目复现和技术教程。是否公开姓名和学校，完全由你决定。</span></div><div><a className="blue-btn" href="/projects#open-projects">上传项目 <b>→</b></a><a className="outline-btn" href="/admin/papers">发布论文解读</a></div></section>
 
-      <SiteFooter home />
-    </main>
-  );
+    <SiteFooter home />
+  </main>;
 }
