@@ -9,6 +9,6 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
   if (!row?.photoKey || !env.FILES) return new NextResponse("Not found", { status: 404 });
   const object = await env.FILES.get(row.photoKey);
   if (!object) return new NextResponse("Not found", { status: 404 });
-  const headers = new Headers(); object.writeHttpMetadata(headers); headers.set("Cache-Control", "public, max-age=3600");
+  const headers = new Headers(); object.writeHttpMetadata(headers); headers.set("Cache-Control", "no-store");
   return new NextResponse(object.body, { headers });
 }
