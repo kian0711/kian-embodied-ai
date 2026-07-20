@@ -1,0 +1,21 @@
+.public-page .collaboration-section{padding:68px 0 96px;background:#eef4fb}
+.public-page .collaboration-head{margin-bottom:30px;padding-bottom:22px;border-bottom:1px solid #d7e1ee}
+.public-page .collaboration-head h2{font-family:inherit;font-size:30px;color:#10204a}
+.public-page .collaborator-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
+.public-page .collaborator-card{display:flex;min-width:0;height:520px;flex-direction:column;border:1px solid #d8e2ef;border-radius:16px;background:#fff;box-shadow:0 10px 28px rgba(37,68,117,.06);overflow:hidden}
+.public-page .collaborator-card:hover{border-color:#9bbcff;box-shadow:0 18px 40px rgba(37,68,117,.12);transform:translateY(-4px)}
+.public-page .collaborator-photo{position:relative;width:100%;height:235px;min-height:235px;aspect-ratio:auto;background:linear-gradient(145deg,#dce8f8,#edf4fc);overflow:hidden}
+.public-page .collaborator-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:center top;filter:none}
+.public-page .collaborator-photo::after{background:linear-gradient(to top,rgba(16,32,74,.6),transparent 42%)}
+.public-page .collaborator-photo span{left:18px;bottom:14px;display:grid;width:34px;height:25px;place-items:center;border-radius:6px;background:#1769ff;color:#fff;font:10px monospace}
+.public-page .collaborator-info{display:flex;min-height:0;flex:1;flex-direction:column;padding:23px 24px}
+.public-page .member-school{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px}
+.public-page .member-school>span{color:#1769ff;font-size:8px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
+.public-page .member-school>small{display:block;min-width:0;color:#71809b;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.public-page .collaborator-info h3{height:42px;margin:9px 0 15px;color:#10204a;font:700 27px/1.4 "Microsoft YaHei",sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.public-page .member-research{height:64px;padding:11px 13px;border-radius:9px;background:#f1f6ff;overflow:hidden}
+.public-page .research-label{margin:0 0 5px;color:#1769ff;font-size:8px;letter-spacing:.14em}
+.public-page .collaborator-info strong{display:-webkit-box;color:#243654;font-size:11px;line-height:1.55;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.public-page .collaborator-bio{display:-webkit-box;height:64px;margin:17px 0 0;padding-top:14px;border-top:1px solid #e1e8f1;color:#65738d;font-size:10px;line-height:1.7;white-space:normal;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+@media(max-width:1000px){.public-page .collaborator-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.public-page .collaboration-head{display:block}.public-page .collaboration-head>p{margin-top:15px}.public-page .collaborator-grid{grid-template-columns:1fr}.public-page .collaborator-card{height:490px}.public-page .collaborator-photo{height:215px;min-height:215px}.public-page .collaborator-info{padding:21px}.public-page .collaborator-info h3{font-size:24px}}
