@@ -15,13 +15,13 @@ export default function Home() {
     <PublicHeader />
 
     <section className="public-hero public-shell">
-      <div className="public-hero-copy"><p className="public-kicker"><i /> 公益 · 免费 · 开放</p><h1>机器人学习，<br /><span>不应该有门槛</span></h1><p>这是一个由机器人学习者共同建设的公益平台。所有公开内容免费开放，让知识被分享，让优秀作品被看见。</p><div className="public-actions"><a className="blue-btn" href="#roadmap">开始学习 <b>→</b></a><a className="outline-btn" href="/projects">浏览项目</a><a className="text-link" href="#upload">上传作品 ↗</a></div><div className="public-promise"><span>✓ 永久免费</span><span>✓ 可匿名发布</span><span>✓ 审核后公开展示</span></div></div>
+      <div className="public-hero-copy"><p className="public-kicker"><i /> 公益 · 免费 · 开放</p><h1>机器人学习，<br /><span>不应该有门槛</span></h1><p>这是一个由机器人学习者共同建设的公益平台。所有公开内容免费开放，让知识被分享，让优秀作品被看见。</p><div className="public-actions"><a className="blue-btn" href="/roadmap">开始学习 <b>→</b></a><a className="outline-btn" href="/projects">浏览项目</a><a className="text-link" href="#upload">上传作品 ↗</a></div><div className="public-promise"><span>✓ 永久免费</span><span>✓ 可匿名发布</span><span>✓ 审核后公开展示</span></div></div>
       <div className="robot-board" aria-label="机器人学习社区方向示意"><div className="board-grid" /><div className="board-head"><span>OPEN LEARNING NETWORK</span><i>LIVE</i></div><div className="robot-core"><span>ROBOT</span><b>学习共同体</b><small>LEARN · BUILD · SHARE</small></div>{directions.map((item,index)=><span className={`topic topic-${index+1}`} key={item}>{item}</span>)}<div className="board-foot"><span>01 学习</span><i>→</i><span>02 实践</span><i>→</i><span>03 分享</span></div></div>
     </section>
 
     <section className="public-features public-shell" id="about">{features.map(feature=><article key={feature.title}><span>{feature.icon}</span><div><h2>{feature.title}</h2><p>{feature.text}</p></div></article>)}</section>
 
-    <section className="learning-preview" id="roadmap"><div className="public-shell"><div className="public-section-head"><div><p>STRUCTURED LEARNING</p><h2>从入门到实践的学习路线</h2></div><a href="/learn/foundation">查看完整路线 →</a></div><div className="learning-steps"><article><span>01</span><b>机器人基础</b><p>运动学、控制与机器人系统的共同语言</p></article><article><span>02</span><b>ROS 与感知</b><p>搭建机器人软件系统，理解视觉与定位</p></article><article><span>03</span><b>具身智能</b><p>VLA、世界模型、强化学习与策略训练</p></article><article><span>04</span><b>项目实践</b><p>从仿真复现到真实机器人部署</p></article></div></div></section>
+    <section className="learning-preview" id="roadmap"><div className="public-shell"><div className="public-section-head"><div><p>STRUCTURED LEARNING</p><h2>从入门到实践的学习路线</h2></div><a href="/roadmap">查看完整路线 →</a></div><div className="learning-steps"><article><span>01</span><b>机器人基础</b><p>运动学、控制与机器人系统的共同语言</p></article><article><span>02</span><b>VLA 模型</b><p>理解视觉、语言与动作如何进入同一个模型</p></article><article><span>03</span><b>世界模型</b><p>学习预测未来、想象规划与模型控制</p></article><article><span>04</span><b>机器人实践</b><p>从仿真复现到真实机器人部署</p></article></div></div></section>
 
     <MyPaperLibrary />
 
