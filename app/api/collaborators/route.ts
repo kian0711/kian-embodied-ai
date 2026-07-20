@@ -26,7 +26,7 @@ export async function GET() {
     const db = getD1();
     await ensureTable(db);
     const rows = await db.prepare(`SELECT id, name, school, research_direction AS researchDirection,
-      bio, created_at AS createdAt FROM collaborators ORDER BY created_at DESC, id DESC`).all();
+      bio, created_at AS createdAt FROM collaborators ORDER BY created_at ASC, id ASC`).all();
     return NextResponse.json({ collaborators: rows.results }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json({ collaborators: [], error: error instanceof Error ? error.message : "暂时无法读取共创成员" }, { status: 500 });
