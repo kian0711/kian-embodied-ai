@@ -11,8 +11,7 @@ export default function PaperAdminPage() {
     const form = event.currentTarget;
     try {
       const formData=new FormData(form);
-      const body=Object.fromEntries(["title","innovation","method","result","implementation","paperUrl"].map((name)=>[name,String(formData.get(name)||"")]));
-      const response=await fetch("/api/reading-papers",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
+      const response=await fetch("/api/reading-papers",{method:"POST",headers:{Authorization:`Bearer ${key}`},body:formData});
       const data=await response.json() as {error?:string}; if(!response.ok) throw new Error(data.error||"发布失败");
       form.reset(); setStatus("上传成功，论文已出现在公开页面。");
     } catch(error) { setStatus(error instanceof Error?error.message:"上传失败，请重试。"); }
@@ -29,6 +28,7 @@ export default function PaperAdminPage() {
       <label>结果<textarea name="result" required maxLength={6000} placeholder="实验结果、指标提升和重要结论" /></label>
       <label>可以实现的途径<textarea name="implementation" required maxLength={6000} placeholder="如何复现、需要哪些工具和具体步骤" /></label>
       <label className="wide">论文链接<input name="paperUrl" type="url" required placeholder="https://arxiv.org/abs/... 或论文官网链接" /></label>
+      <label className="wide file-field">一张图了解这篇论文<input name="image" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" /><small>可选，支持 JPG、PNG、WebP，最大 4MB；建议使用横版知识图或方法流程图</small></label>
       <button className="wide" disabled={busy}>{busy ? "正在发布…" : "发布论文精读 →"}</button>
       {status && <p className="wide form-status" role="status">{status}</p>}
     </form>
