@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getD1 } from "../../../db";
+import { classicPapers } from "../../../lib/classicPapers";
 
 const feeds = [
   { category:"vla", label:"VLA 模型", query:"vision language action robot" },
@@ -17,10 +18,13 @@ async function ensureTables(db:D1Database) {
 }
 
 async function dailySync(db:D1Database) {
-  const today=new Date().toISOString().slice(0,10); const existing=await db.prepare("SELECT last_sync_date FROM paper_sync WHERE id = ?").bind("global").first<{last_sync_date:string}>();
+  const today=new Date().toISOString().slice(0,10);
+  const seedResults=await db.batch(classicPapers.map(paper=>db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,paper.abstract,paper.authors,paper.year,null,paper.url,paper.category,paper.categoryLabel,0,today)));
+  const seeded=seedResults.reduce((sum,result)=>sum+Number(result.meta.changes??0),0);
+  const existing=await db.prepare("SELECT last_sync_date FROM paper_sync WHERE id = ?").bind("global").first<{last_sync_date:string}>();
   const countRow=await db.prepare("SELECT COUNT(*) AS total FROM papers").first<{total:number}>(); let currentTotal=Number(countRow?.total??0); const bootstrap=currentTotal<50;
-  if(existing?.last_sync_date===today&&!bootstrap) return {live:true,added:0};
-  let added=0; let reachedTarget=false;
+  if(existing?.last_sync_date===today&&!bootstrap){if(seeded)await db.prepare("UPDATE paper_sync SET added_count = added_count + ? WHERE id = ?").bind(seeded,"global").run();return {live:true,added:seeded};}
+  let added=seeded; let reachedTarget=false;
   for(const feed of feeds){
     try{
       const fields="title,abstract,year,authors,url,citationCount,publicationDate";
