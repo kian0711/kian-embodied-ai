@@ -13,6 +13,7 @@ async function ensureTable(db: D1Database) {
     photo_name TEXT NOT NULL,
     created_at TEXT NOT NULL
   )`).run();
+  try { await db.prepare(`ALTER TABLE collaborators ADD COLUMN photo_position TEXT NOT NULL DEFAULT '50% 20%'`).run(); } catch {}
 }
 
 function isAdmin(request: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET() {
     const db = getD1();
     await ensureTable(db);
     const rows = await db.prepare(`SELECT id, name, school, research_direction AS researchDirection,
-      bio, created_at AS createdAt FROM collaborators ORDER BY created_at ASC, id ASC`).all();
+      bio, photo_position AS photoPosition, created_at AS createdAt FROM collaborators ORDER BY created_at ASC, id ASC`).all();
     return NextResponse.json({ collaborators: rows.results }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json({ collaborators: [], error: error instanceof Error ? error.message : "暂时无法读取共创成员" }, { status: 500 });
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
     const school = String(form.get("school") || "").trim();
     const researchDirection = String(form.get("researchDirection") || "").trim();
     const bio = String(form.get("bio") || "").trim();
+    const photoPosition = String(form.get("photoPosition") || "50% 20%").trim();
     if (!name || !school || !researchDirection || !bio) return NextResponse.json({ error: "请填写全部成员资料" }, { status: 400 });
     if (name.length > 80 || school.length > 160 || researchDirection.length > 300 || bio.length > 2000) return NextResponse.json({ error: "成员资料超出字数限制" }, { status: 400 });
 
@@ -58,8 +60,8 @@ export async function POST(request: NextRequest) {
     await ensureTable(db);
     try {
       const row = await db.prepare(`INSERT INTO collaborators
-        (name, school, research_direction, bio, photo_key, photo_name, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`).bind(name, school, researchDirection, bio, photoKey, photo.name, new Date().toISOString()).first<{ id: number }>();
+        (name, school, research_direction, bio, photo_key, photo_name, photo_position, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`).bind(name, school, researchDirection, bio, photoKey, photo.name, photoPosition, new Date().toISOString()).first<{ id: number }>();
       return NextResponse.json({ ok: true, id: row?.id }, { status: 201 });
     } catch (error) {
       await env.FILES.delete(photoKey);
