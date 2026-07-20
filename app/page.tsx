@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AccumulatingPaperLibrary } from "./components/AccumulatingPaperLibrary";
 import { MyPaperLibrary } from "./components/MyPaperLibrary";
+import { SiteFooter } from "./components/SiteFooter";
 
 const tracks = [
   { id: "foundation", step: "01", title: "基础导航", en: "FOUNDATIONS", desc: "从具身智能的核心问题出发，建立机器人学、视觉与强化学习的共同语言。", lessons: 12, time: "6 小时", color: "violet" },
@@ -72,7 +73,7 @@ export default function Home() {
         <div className="pipeline"><div><b>01</b><span>看见</span><small>Vision</small></div><i>→</i><div><b>02</b><span>理解</span><small>Language</small></div><i>→</i><div><b>03</b><span>规划</span><small>Policy</small></div><i>→</i><div><b>04</b><span>行动</span><small>Action</small></div></div>
       </section>
 
-      <footer className="shell"><a href="#top" className="brand"><span className="brand-mark">K<i /></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><p>原创课程内容，未经书面授权禁止复制、转载或商用。<a className="copyright-link" href="/copyright">版权声明</a></p><span>© 2026 KIAN · ALL RIGHTS RESERVED.</span></footer>
+      <SiteFooter home />
     </main>
   );
 }

@@ -38,3 +38,9 @@ export const readingPapers = sqliteTable("reading_papers", {
   pdfSize: integer("pdf_size").notNull(),
   createdAt: text("created_at").notNull(),
 });
+
+export const siteViews = sqliteTable("site_views", {
+  id: text("id").primaryKey(),
+  viewCount: integer("view_count").notNull().default(0),
+  updatedAt: text("updated_at").notNull(),
+});
