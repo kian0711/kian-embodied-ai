@@ -4,6 +4,14 @@ import { FormEvent, useState } from "react";
 
 type AdminPaper={id:number;title:string;status:"pending"|"approved";createdAt:string;paperUrl:string;hasImage:number};
 
+async function readResponse(response: Response): Promise<{error?: string}> {
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) return response.json() as Promise<{error?: string}>;
+  const message = (await response.text()).trim();
+  if (response.status === 413) return { error: "上传内容过大，请选择不超过 4MB 的图片后重试。" };
+  return { error: message || `请求失败（HTTP ${response.status}）` };
+}
+
 export default function PaperAdminPage() {
   const [key, setKey] = useState("");
   const [status, setStatus] = useState("");
@@ -28,8 +36,10 @@ export default function PaperAdminPage() {
     const form = event.currentTarget;
     try {
       const formData=new FormData(form);
+      const image=formData.get("image");
+      if(image instanceof File && image.size > 4 * 1024 * 1024) throw new Error("图片不能超过 4MB，请压缩后重试。");
       const response=await fetch("/api/reading-papers",{method:"POST",headers:{Authorization:`Bearer ${key}`},body:formData});
-      const data=await response.json() as {error?:string}; if(!response.ok) throw new Error(data.error||"发布失败");
+      const data=await readResponse(response); if(!response.ok) throw new Error(data.error||"发布失败");
       form.reset(); setStatus("提交成功，论文已进入待审核列表。"); await loadPapers();
     } catch(error) { setStatus(error instanceof Error?error.message:"上传失败，请重试。"); }
     finally { setBusy(false); }
