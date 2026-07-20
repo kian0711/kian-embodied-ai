@@ -8,6 +8,13 @@
       "when": 1784532502172,
       "tag": "0000_yellow_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784543210766,
+      "tag": "0001_slimy_sinister_six",
+      "breakpoints": true
     }
   ]
 }

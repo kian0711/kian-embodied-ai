@@ -21,3 +21,16 @@ export const paperSync = sqliteTable("paper_sync", {
   lastSyncAt: text("last_sync_at").notNull(),
   addedCount: integer("added_count").notNull().default(0),
 });
+
+export const readingPapers = sqliteTable("reading_papers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  innovation: text("innovation").notNull(),
+  method: text("method").notNull(),
+  result: text("result").notNull(),
+  implementation: text("implementation").notNull(),
+  pdfKey: text("pdf_key").notNull(),
+  pdfName: text("pdf_name").notNull(),
+  pdfSize: integer("pdf_size").notNull(),
+  createdAt: text("created_at").notNull(),
+});
