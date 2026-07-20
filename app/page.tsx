@@ -1,5 +1,6 @@
 import { MyPaperLibrary } from "./components/MyPaperLibrary";
 import { SiteFooter } from "./components/SiteFooter";
+import { PublicHeader } from "./components/PublicHeader";
 
 const features = [
   { icon: "01", title: "免费学习", text: "所有公开课程、项目和论文解读均免费开放，不设会员与付费门槛。" },
@@ -11,12 +12,7 @@ const directions = ["ROS 2", "移动机器人", "机械臂", "四足机器人", 
 
 export default function Home() {
   return <main className="home-modern" id="top">
-    <header className="public-nav"><div className="public-shell">
-      <a className="public-brand" href="#top"><span>R</span><div><b>ROBOT COMMONS</b><small>机器人公益学习平台</small></div></a>
-      <nav aria-label="主导航"><a href="#top">首页</a><a href="#roadmap">学习路线</a><a href="/papers">论文图谱</a><a href="#my-papers">论文解读</a><a href="/projects">开源项目</a><a href="/collaboration">合作共创</a></nav>
-      <details className="mobile-menu"><summary>浏览模块</summary><nav aria-label="移动端模块导航"><a href="#roadmap">学习路线</a><a href="/papers">论文图谱</a><a href="#my-papers">论文解读</a><a href="/projects">开源项目</a><a href="/collaboration">合作共创</a></nav></details>
-      <a className="nav-upload" href="#upload">上传作品</a>
-    </div></header>
+    <PublicHeader />
 
     <section className="public-hero public-shell">
       <div className="public-hero-copy"><p className="public-kicker"><i /> 公益 · 免费 · 开放</p><h1>机器人学习，<br /><span>不应该有门槛</span></h1><p>这是一个由机器人学习者共同建设的公益平台。所有公开内容免费开放，让知识被分享，让优秀作品被看见。</p><div className="public-actions"><a className="blue-btn" href="#roadmap">开始学习 <b>→</b></a><a className="outline-btn" href="/projects">浏览项目</a><a className="text-link" href="#upload">上传作品 ↗</a></div><div className="public-promise"><span>✓ 永久免费</span><span>✓ 可匿名发布</span><span>✓ 审核后公开展示</span></div></div>

@@ -1,3 +1,4 @@
 import { CollaboratorSection } from "../components/CollaboratorSection";
-import { SiteFooter,SiteInfoBar } from "../components/SiteFooter";
-export default function CollaborationPage(){return <main><SiteInfoBar/><nav className="nav shell"><a href="/" className="brand"><span className="brand-mark">K<i/></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><div className="nav-links"><a href="/">学习首页</a><a href="/papers">论文图谱</a><a href="/projects">开源项目</a></div><a className="nav-cta" href="/">返回首页 <span>↗</span></a></nav><header className="portal-hero shell"><p className="eyebrow"><span/> COLLABORATE · CREATE · EXPLORE</p><h1>合作共创</h1><p>连接不同学校与研究方向的探索者，让想法在交流和实践中共同生长。</p></header><CollaboratorSection/><SiteFooter/></main>}
+import { PublicHeader } from "../components/PublicHeader";
+import { SiteFooter } from "../components/SiteFooter";
+export default function CollaborationPage(){return <main className="home-modern public-page"><PublicHeader/><header className="public-portal-hero public-shell"><p>COLLABORATE · CREATE · EXPLORE</p><h1>合作共创</h1><span>连接不同学校与研究方向的探索者，让想法在交流和实践中共同生长。</span></header><CollaboratorSection/><SiteFooter/></main>}

@@ -1,3 +1,4 @@
 import { AccumulatingPaperLibrary } from "../components/AccumulatingPaperLibrary";
-import { SiteFooter,SiteInfoBar } from "../components/SiteFooter";
-export default function PapersPage(){return <main><SiteInfoBar/><nav className="nav shell"><a href="/" className="brand"><span className="brand-mark">K<i/></span><span>KIAN<small>EMBODIED INTELLIGENCE</small></span></a><div className="nav-links"><a href="/">学习首页</a><a href="/projects">开源项目</a><a href="/collaboration">合作共创</a></div><a className="nav-cta" href="/">返回首页 <span>↗</span></a></nav><header className="portal-hero shell"><p className="eyebrow"><span/> FROM CLASSIC TO FRONTIER</p><h1>论文图谱</h1><p>从经典工作到最新前沿，沿时间与研究方向探索具身智能论文。</p></header><section className="papers-section portal-content"><div className="shell"><AccumulatingPaperLibrary/></div></section><SiteFooter/></main>}
+import { PublicHeader } from "../components/PublicHeader";
+import { SiteFooter } from "../components/SiteFooter";
+export default function PapersPage(){return <main className="home-modern public-page"><PublicHeader/><header className="public-portal-hero public-shell"><p>FROM CLASSIC TO FRONTIER</p><h1>论文图谱</h1><span>从经典工作到最新前沿，沿时间与研究方向探索具身智能论文。</span></header><section className="papers-section public-paper-page"><div className="public-shell"><AccumulatingPaperLibrary/></div></section><SiteFooter/></main>}
