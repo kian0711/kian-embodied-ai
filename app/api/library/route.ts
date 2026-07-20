@@ -9,6 +9,13 @@ const feeds = [
   { category:"foundation", label:"基础研究", query:"embodied intelligence robot learning" },
 ];
 
+function preferredPaperUrl(paper:{externalIds?:{ArXiv?:string;DOI?:string};openAccessPdf?:{url?:string}|null;url?:string;paperId:string}) {
+  if(paper.externalIds?.ArXiv) return `https://arxiv.org/abs/${paper.externalIds.ArXiv}`;
+  if(paper.externalIds?.DOI) return `https://doi.org/${paper.externalIds.DOI}`;
+  if(paper.openAccessPdf?.url) return paper.openAccessPdf.url;
+  return paper.url??`https://www.semanticscholar.org/paper/${paper.paperId}`;
+}
+
 async function ensureTables(db:D1Database) {
   await db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, paper_id TEXT NOT NULL UNIQUE, title TEXT NOT NULL, abstract TEXT NOT NULL DEFAULT '', authors TEXT NOT NULL DEFAULT '', year INTEGER NOT NULL, published_at TEXT, url TEXT NOT NULL, category TEXT NOT NULL, category_label TEXT NOT NULL, citations INTEGER NOT NULL DEFAULT 0, added_at TEXT NOT NULL)`),
@@ -24,16 +31,15 @@ async function dailySync(db:D1Database) {
   const existing=await db.prepare("SELECT last_sync_date FROM paper_sync WHERE id = ?").bind("global").first<{last_sync_date:string}>();
   const countRow=await db.prepare("SELECT COUNT(*) AS total FROM papers").first<{total:number}>(); let currentTotal=Number(countRow?.total??0); const bootstrap=currentTotal<100;
   if(existing?.last_sync_date===today&&!bootstrap){if(seeded)await db.prepare("UPDATE paper_sync SET added_count = added_count + ? WHERE id = ?").bind(seeded,"global").run();return {live:true,added:seeded};}
-  let added=seeded; let reachedTarget=false;
+  let added=seeded;
   for(const feed of feeds){
     try{
-      const fields="title,abstract,year,authors,url,citationCount,publicationDate";
+      const fields="title,abstract,year,authors,url,citationCount,publicationDate,externalIds,openAccessPdf";
       const url=`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(feed.query)}&year=2023-2026&limit=${bootstrap?100:16}&fields=${fields}`;
       const response=await fetch(url,{headers:{"User-Agent":"KIAN-Embodied-AI-Learning/1.0"}}); if(!response.ok) continue;
-      const result=await response.json() as {data?:Array<{paperId:string;title:string;abstract?:string;year?:number;authors?:Array<{name:string}>;url?:string;citationCount?:number;publicationDate?:string}>};
+      const result=await response.json() as {data?:Array<{paperId:string;title:string;abstract?:string;year?:number;authors?:Array<{name:string}>;url?:string;citationCount?:number;publicationDate?:string;externalIds?:{ArXiv?:string;DOI?:string};openAccessPdf?:{url?:string}|null}>};
       const selected=(result.data??[]).filter(p=>p.paperId&&p.title&&p.year&&p.year>=2023&&p.year<=2026).sort((a,b)=>(b.year??0)-(a.year??0)||String(b.publicationDate??"").localeCompare(String(a.publicationDate??""))||(b.citationCount??0)-(a.citationCount??0)).slice(0,bootstrap?40:4);
-      for(const paper of selected){if(bootstrap&&currentTotal>=100){reachedTarget=true;break} const outcome=await db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,paper.url??`https://www.semanticscholar.org/paper/${paper.paperId}`,feed.category,feed.label,paper.citationCount??0,today).run(); if(outcome.meta.changes){const changes=Number(outcome.meta.changes);added+=changes;currentTotal+=changes}}
-      if(reachedTarget) break;
+      for(const paper of selected){const wasExisting=await db.prepare("SELECT 1 AS found FROM papers WHERE paper_id = ?").bind(paper.paperId).first<{found:number}>(); if(!wasExisting&&bootstrap&&currentTotal>=100) continue; await db.prepare(`INSERT INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(paper_id) DO UPDATE SET url=excluded.url, published_at=COALESCE(excluded.published_at,papers.published_at), citations=MAX(papers.citations,excluded.citations)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,preferredPaperUrl(paper),feed.category,feed.label,paper.citationCount??0,today).run(); if(!wasExisting){added+=1;currentTotal+=1}}
     }catch{continue}
   }
   const now=new Date().toISOString(); await db.prepare(`INSERT INTO paper_sync (id,last_sync_date,last_sync_at,added_count) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET last_sync_date=excluded.last_sync_date,last_sync_at=excluded.last_sync_at,added_count=excluded.added_count`).bind("global",today,now,added).run();
