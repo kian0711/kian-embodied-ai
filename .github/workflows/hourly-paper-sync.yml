@@ -1,0 +1,29 @@
+name: Hourly robot paper sync
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger KIAN paper library sync
+        run: |
+          curl --fail --silent --show-error \
+            --retry 3 --retry-delay 10 \
+            "https://kian-embodied-ai.pengyu9711791686.chatgpt.site/api/library?page=1" \
+            --output /tmp/kian-paper-sync.json
+          python - <<'PY'
+          import json
+          with open('/tmp/kian-paper-sync.json', encoding='utf-8') as handle:
+              data = json.load(handle)
+          if data.get('live') is not True:
+              raise SystemExit('KIAN paper sync did not complete successfully')
+          print(f"total={data.get('total')} added={data.get('addedToday')} lastSyncAt={data.get('lastSyncAt')}")
+          PY

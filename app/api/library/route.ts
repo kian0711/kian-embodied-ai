@@ -24,31 +24,33 @@ async function ensureTables(db:D1Database) {
   ]);
 }
 
-async function dailySync(db:D1Database) {
-  const today=new Date().toISOString().slice(0,10);
+async function hourlySync(db:D1Database) {
+  const now=new Date(); const today=now.toISOString().slice(0,10); const currentYear=now.getUTCFullYear();
   const seedResults=await db.batch(classicPapers.map(paper=>db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,paper.abstract,paper.authors,paper.year,null,paper.url,paper.category,paper.categoryLabel,0,today)));
   const seeded=seedResults.reduce((sum,result)=>sum+Number(result.meta.changes??0),0);
-  const existing=await db.prepare("SELECT last_sync_date FROM paper_sync WHERE id = ?").bind("global").first<{last_sync_date:string}>();
-  const countRow=await db.prepare("SELECT COUNT(*) AS total FROM papers").first<{total:number}>(); let currentTotal=Number(countRow?.total??0); const bootstrap=currentTotal<100;
-  if(existing?.last_sync_date===today&&!bootstrap){if(seeded)await db.prepare("UPDATE paper_sync SET added_count = added_count + ? WHERE id = ?").bind(seeded,"global").run();return {live:true,added:seeded};}
+  const existing=await db.prepare("SELECT last_sync_at FROM paper_sync WHERE id = ?").bind("global").first<{last_sync_at:string}>();
+  const lastSyncMs=existing?.last_sync_at?Date.parse(existing.last_sync_at):0;
+  if(lastSyncMs&&now.getTime()-lastSyncMs<55*60*1000){return {live:true,added:0,skipped:true};}
   let added=seeded;
+  const hourWindow=Math.floor(now.getTime()/3600000)%10;
   for(const feed of feeds){
+    if(added>=50) break;
     try{
       const fields="title,abstract,year,authors,url,citationCount,publicationDate,externalIds,openAccessPdf";
-      const url=`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(feed.query)}&year=2023-2026&limit=${bootstrap?100:16}&fields=${fields}`;
+      const url=`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(feed.query)}&year=2023-${currentYear}&offset=${hourWindow*100}&limit=100&fields=${fields}`;
       const response=await fetch(url,{headers:{"User-Agent":"KIAN-Embodied-AI-Learning/1.0"}}); if(!response.ok) continue;
       const result=await response.json() as {data?:Array<{paperId:string;title:string;abstract?:string;year?:number;authors?:Array<{name:string}>;url?:string;citationCount?:number;publicationDate?:string;externalIds?:{ArXiv?:string;DOI?:string};openAccessPdf?:{url?:string}|null}>};
-      const selected=(result.data??[]).filter(p=>p.paperId&&p.title&&p.year&&p.year>=2023&&p.year<=2026).sort((a,b)=>(b.year??0)-(a.year??0)||String(b.publicationDate??"").localeCompare(String(a.publicationDate??""))||(b.citationCount??0)-(a.citationCount??0)).slice(0,bootstrap?40:4);
-      for(const paper of selected){const wasExisting=await db.prepare("SELECT 1 AS found FROM papers WHERE paper_id = ?").bind(paper.paperId).first<{found:number}>(); if(!wasExisting&&bootstrap&&currentTotal>=100) continue; await db.prepare(`INSERT INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(paper_id) DO UPDATE SET url=excluded.url, published_at=COALESCE(excluded.published_at,papers.published_at), citations=MAX(papers.citations,excluded.citations)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,preferredPaperUrl(paper),feed.category,feed.label,paper.citationCount??0,today).run(); if(!wasExisting){added+=1;currentTotal+=1}}
+      const selected=(result.data??[]).filter(p=>p.paperId&&p.title&&p.year&&p.year>=2023&&p.year<=currentYear).sort((a,b)=>String(b.publicationDate??"").localeCompare(String(a.publicationDate??""))||(b.citationCount??0)-(a.citationCount??0));
+      for(const paper of selected){if(added>=50)break;const insert=await db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,preferredPaperUrl(paper),feed.category,feed.label,paper.citationCount??0,today).run();if(Number(insert.meta.changes??0)>0)added+=1;else await db.prepare("UPDATE papers SET url = ?, published_at = COALESCE(?, published_at), citations = MAX(citations, ?) WHERE paper_id = ?").bind(preferredPaperUrl(paper),paper.publicationDate??null,paper.citationCount??0,paper.paperId).run()}
     }catch{continue}
   }
-  const now=new Date().toISOString(); await db.prepare(`INSERT INTO paper_sync (id,last_sync_date,last_sync_at,added_count) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET last_sync_date=excluded.last_sync_date,last_sync_at=excluded.last_sync_at,added_count=excluded.added_count`).bind("global",today,now,added).run();
-  return {live:true,added};
+  const syncedAt=now.toISOString(); await db.prepare(`INSERT INTO paper_sync (id,last_sync_date,last_sync_at,added_count) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET last_sync_date=excluded.last_sync_date,last_sync_at=excluded.last_sync_at,added_count=excluded.added_count`).bind("global",today,syncedAt,added).run();
+  return {live:true,added,skipped:false};
 }
 
 export async function GET(request:NextRequest){
   try{
-    const db=getD1(); await ensureTables(db); const sync=await dailySync(db);
+    const db=getD1(); await ensureTables(db); const sync=await hourlySync(db);
     const page=Math.max(1,Number(request.nextUrl.searchParams.get("page")||1)); const limit=8; const offset=(page-1)*limit; const category=request.nextUrl.searchParams.get("category")||"all"; const year=request.nextUrl.searchParams.get("year")||"all"; const q=(request.nextUrl.searchParams.get("q")||"").trim();
     const clauses:string[]=[]; const values:(string|number)[]=[]; if(category!=="all"){clauses.push("category = ?");values.push(category)} if(year!=="all"){clauses.push("year = ?");values.push(Number(year))} if(q){clauses.push("(title LIKE ? OR abstract LIKE ? OR authors LIKE ?)");const like=`%${q}%`;values.push(like,like,like)} const where=clauses.length?`WHERE ${clauses.join(" AND ")}`:"";
     const count=await db.prepare(`SELECT COUNT(*) AS total FROM papers ${where}`).bind(...values).first<{total:number}>(); const total=Number(count?.total??0);
