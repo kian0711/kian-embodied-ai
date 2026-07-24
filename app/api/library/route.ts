@@ -14,6 +14,60 @@ type CrossrefWork={DOI?:string;title?:string[];abstract?:string;author?:Array<{g
 function crossrefDate(work:CrossrefWork){const parts=(work["published-online"]?.["date-parts"]??work.published?.["date-parts"]??[])[0]??[];if(!parts[0])return null;return `${parts[0]}-${String(parts[1]??1).padStart(2,"0")}-${String(parts[2]??1).padStart(2,"0")}`}
 function plainAbstract(value?:string){return (value??"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim().slice(0,500)}
 function isRobotPaper(title:string,abstract:string){return /(robot|robotic|embodied|manipulation|vision.language.action|world model|sim.?to.?real|imitation learning|grasp|locomotion)/i.test(`${title} ${abstract}`)}
+function titleZh(title:string){
+  const replacements: [RegExp,string][] = [
+    [/\bvision-language-action\b/gi,"视觉-语言-动作"],
+    [/\bvision language action\b/gi,"视觉语言动作"],
+    [/\bworld models?\b/gi,"世界模型"],
+    [/\bfoundation models?\b/gi,"基础模型"],
+    [/\bembodied ai\b/gi,"具身智能"],
+    [/\bembodied intelligence\b/gi,"具身智能"],
+    [/\brobotic manipulation\b/gi,"机器人操作"],
+    [/\brobot manipulation\b/gi,"机器人操作"],
+    [/\brobot learning\b/gi,"机器人学习"],
+    [/\brobotics\b/gi,"机器人学"],
+    [/\brobotic\b/gi,"机器人"],
+    [/\brobot\b/gi,"机器人"],
+    [/\bimitation learning\b/gi,"模仿学习"],
+    [/\breinforcement learning\b/gi,"强化学习"],
+    [/\bdiffusion policy\b/gi,"扩散策略"],
+    [/\bplanning\b/gi,"规划"],
+    [/\bcontrol\b/gi,"控制"],
+    [/\bmanipulation\b/gi,"操作"],
+    [/\bgrasping\b/gi,"抓取"],
+    [/\bgrasp\b/gi,"抓取"],
+    [/\blocmotion\b/gi,"运动控制"],
+    [/\bsimulation\b/gi,"仿真"],
+    [/\bsimulator\b/gi,"仿真器"],
+    [/\bsim-to-real\b/gi,"仿真到现实"],
+    [/\bbenchmark\b/gi,"基准"],
+    [/\bdataset\b/gi,"数据集"],
+    [/\bdatasets\b/gi,"数据集"],
+    [/\bgeneralist\b/gi,"通用"],
+    [/\bopen-source\b/gi,"开源"],
+    [/\bmultimodal\b/gi,"多模态"],
+    [/\blanguage-conditioned\b/gi,"语言条件"],
+    [/\btransfer\b/gi,"迁移"],
+    [/\bpolicy\b/gi,"策略"],
+    [/\bpolicies\b/gi,"策略"],
+  ];
+  const translated=replacements.reduce((text,[pattern,value])=>text.replace(pattern,value),title);
+  return translated===title?`中文参考：${title}`:`中文参考：${translated}`;
+}
+function abstractZh(title:string,abstract:string){
+  if(!abstract)return `这篇论文关注“${title}”。当前数据库暂未提供英文摘要，建议点击原文查看完整摘要、方法和实验结果。`;
+  const lower=`${title} ${abstract}`.toLowerCase();
+  const topics:string[]=[];
+  if(/vision[- ]language[- ]action|vla/.test(lower))topics.push("视觉语言动作模型");
+  if(/world model|simulation|simulator/.test(lower))topics.push("世界模型与仿真");
+  if(/manipulation|grasp/.test(lower))topics.push("机器人操作与抓取");
+  if(/imitation learning|demonstration/.test(lower))topics.push("模仿学习");
+  if(/reinforcement learning|policy optimization/.test(lower))topics.push("强化学习");
+  if(/dataset|benchmark/.test(lower))topics.push("数据集或评测基准");
+  const focus=topics.length?topics.join("、"):"机器人相关方法";
+  const firstSentence=abstract.split(/(?<=[.!?])\s+/).find(Boolean)?.slice(0,260)??abstract.slice(0,260);
+  return `中文摘要参考：本文主要涉及${focus}。英文摘要核心信息为：${firstSentence}`;
+}
 
 async function ensureTables(db:D1Database) {
   await db.batch([
@@ -57,8 +111,9 @@ export async function GET(request:NextRequest){
     const page=Math.max(1,Number(request.nextUrl.searchParams.get("page")||1)); const limit=8; const offset=(page-1)*limit; const category=request.nextUrl.searchParams.get("category")||"all"; const year=request.nextUrl.searchParams.get("year")||"all"; const q=(request.nextUrl.searchParams.get("q")||"").trim();
     const clauses:string[]=[]; const values:(string|number)[]=[]; if(category!=="all"){clauses.push("category = ?");values.push(category)} if(year!=="all"){clauses.push("year = ?");values.push(Number(year))} if(q){clauses.push("(title LIKE ? OR abstract LIKE ? OR authors LIKE ?)");const like=`%${q}%`;values.push(like,like,like)} const where=clauses.length?`WHERE ${clauses.join(" AND ")}`:"";
     const count=await db.prepare(`SELECT COUNT(*) AS total FROM papers ${where}`).bind(...values).first<{total:number}>(); const total=Number(count?.total??0);
-    const rows=await db.prepare(`SELECT id,title,abstract,authors,year,url,category,category_label AS categoryLabel,citations,added_at AS addedAt FROM papers ${where} ORDER BY year DESC, COALESCE(published_at,'') DESC, citations DESC, id DESC LIMIT ? OFFSET ?`).bind(...values,limit,offset).all();
+    const rows=await db.prepare(`SELECT id,title,abstract,authors,year,url,category,category_label AS categoryLabel,citations,added_at AS addedAt FROM papers ${where} ORDER BY year DESC, COALESCE(published_at,'') DESC, citations DESC, id DESC LIMIT ? OFFSET ?`).bind(...values,limit,offset).all<{id:number;title:string;abstract:string;authors:string;year:number;url:string;category:string;categoryLabel:string;citations:number;addedAt:string}>();
+    const papers=(rows.results??[]).map(paper=>({...paper,titleZh:titleZh(paper.title),abstractEn:paper.abstract||"No abstract is available in the source metadata.",abstractZh:abstractZh(paper.title,paper.abstract)}));
     const status=await db.prepare("SELECT last_sync_at AS lastSyncAt, added_count AS addedToday FROM paper_sync WHERE id = ?").bind("global").first<{lastSyncAt:string;addedToday:number}>();
-    return NextResponse.json({papers:rows.results,total,page,pages:Math.max(1,Math.ceil(total/limit)),lastSyncAt:status?.lastSyncAt??null,addedToday:status?.addedToday??sync.added,live:sync.live},{headers:{"Cache-Control":"no-store"}});
+    return NextResponse.json({papers,total,page,pages:Math.max(1,Math.ceil(total/limit)),lastSyncAt:status?.lastSyncAt??null,addedToday:status?.addedToday??sync.added,live:sync.live},{headers:{"Cache-Control":"no-store"}});
   }catch(error){return NextResponse.json({papers:[],total:0,page:1,pages:1,lastSyncAt:null,addedToday:0,live:false,error:error instanceof Error?error.message:"unavailable"});}
 }
