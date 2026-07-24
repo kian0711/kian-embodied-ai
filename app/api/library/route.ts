@@ -4,17 +4,16 @@ import { classicPapers } from "../../../lib/classicPapers";
 
 const feeds = [
   { category:"vla", label:"VLA 模型", query:"vision language action robot" },
-  { category:"world", label:"世界模型", query:"robotics world model planning" },
+  { category:"world", label:"世界模型", query:"robot world model planning" },
   { category:"practice", label:"机器人实践", query:"robot manipulation imitation learning" },
-  { category:"foundation", label:"基础研究", query:"embodied intelligence robot learning" },
+  { category:"foundation", label:"基础研究", query:"embodied intelligence robotics" },
 ];
 
-function preferredPaperUrl(paper:{externalIds?:{ArXiv?:string;DOI?:string};openAccessPdf?:{url?:string}|null;url?:string;paperId:string}) {
-  if(paper.externalIds?.ArXiv) return `https://arxiv.org/abs/${paper.externalIds.ArXiv}`;
-  if(paper.externalIds?.DOI) return `https://doi.org/${paper.externalIds.DOI}`;
-  if(paper.openAccessPdf?.url) return paper.openAccessPdf.url;
-  return paper.url??`https://www.semanticscholar.org/paper/${paper.paperId}`;
-}
+type CrossrefWork={DOI?:string;title?:string[];abstract?:string;author?:Array<{given?:string;family?:string}>;published?:{"date-parts"?:number[][]};"published-online"?:{"date-parts"?:number[][]};URL?:string;"is-referenced-by-count"?:number};
+
+function crossrefDate(work:CrossrefWork){const parts=(work["published-online"]?.["date-parts"]??work.published?.["date-parts"]??[])[0]??[];if(!parts[0])return null;return `${parts[0]}-${String(parts[1]??1).padStart(2,"0")}-${String(parts[2]??1).padStart(2,"0")}`}
+function plainAbstract(value?:string){return (value??"").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim().slice(0,500)}
+function isRobotPaper(title:string,abstract:string){return /(robot|robotic|embodied|manipulation|vision.language.action|world model|sim.?to.?real|imitation learning|grasp|locomotion)/i.test(`${title} ${abstract}`)}
 
 async function ensureTables(db:D1Database) {
   await db.batch([
@@ -32,18 +31,18 @@ async function hourlySync(db:D1Database) {
   const lastSyncMs=existing?.last_sync_at?Date.parse(existing.last_sync_at):0;
   if(lastSyncMs&&now.getTime()-lastSyncMs<55*60*1000){return {live:true,added:0,skipped:true};}
   let added=seeded;
-  const hourWindow=Math.floor(now.getTime()/3600000)%10;
-  for(const feed of feeds){
+  const hourWindow=Math.floor(now.getTime()/3600000)%10; const rotatedFeeds=[...feeds.slice(hourWindow%feeds.length),...feeds.slice(0,hourWindow%feeds.length)];
+  let successfulFeeds=0;
+  for(const feed of rotatedFeeds){
     if(added>=50) break;
     try{
-      const fields="title,abstract,year,authors,url,citationCount,publicationDate,externalIds,openAccessPdf";
-      const url=`https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(feed.query)}&year=2023-${currentYear}&offset=${hourWindow*100}&limit=100&fields=${fields}`;
-      const response=await fetch(url,{headers:{"User-Agent":"KIAN-Embodied-AI-Learning/1.0"}}); if(!response.ok) continue;
-      const result=await response.json() as {data?:Array<{paperId:string;title:string;abstract?:string;year?:number;authors?:Array<{name:string}>;url?:string;citationCount?:number;publicationDate?:string;externalIds?:{ArXiv?:string;DOI?:string};openAccessPdf?:{url?:string}|null}>};
-      const selected=(result.data??[]).filter(p=>p.paperId&&p.title&&p.year&&p.year>=2023&&p.year<=currentYear).sort((a,b)=>String(b.publicationDate??"").localeCompare(String(a.publicationDate??""))||(b.citationCount??0)-(a.citationCount??0));
-      for(const paper of selected){if(added>=50)break;const insert=await db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paper.paperId,paper.title,(paper.abstract??"").slice(0,500),(paper.authors??[]).slice(0,5).map(a=>a.name).join(" · "),paper.year,paper.publicationDate??null,preferredPaperUrl(paper),feed.category,feed.label,paper.citationCount??0,today).run();if(Number(insert.meta.changes??0)>0)added+=1;else await db.prepare("UPDATE papers SET url = ?, published_at = COALESCE(?, published_at), citations = MAX(citations, ?) WHERE paper_id = ?").bind(preferredPaperUrl(paper),paper.publicationDate??null,paper.citationCount??0,paper.paperId).run()}
+      const url=`https://api.crossref.org/works?query.title=${encodeURIComponent(feed.query)}&filter=from-pub-date:2023-01-01,until-pub-date:${today}&sort=relevance&order=desc&rows=100&offset=${hourWindow*100}&mailto=kian0711%40users.noreply.github.com`;
+      const response=await fetch(url,{headers:{"User-Agent":"KIAN-Embodied-AI-Learning/1.0 (mailto:kian0711@users.noreply.github.com)"}}); if(!response.ok) continue;
+      const result=await response.json() as {message?:{items?:CrossrefWork[]}}; successfulFeeds+=1;
+      for(const paper of result.message?.items??[]){if(added>=50)break;const doi=String(paper.DOI??"").trim();const title=String(paper.title?.[0]??"").trim();const publishedAt=crossrefDate(paper);const year=Number(publishedAt?.slice(0,4)??0);const abstract=plainAbstract(paper.abstract);if(!doi||!title||year<2023||year>currentYear||!isRobotPaper(title,abstract))continue;const paperId=`doi:${doi.toLowerCase()}`;const paperUrl=`https://doi.org/${doi}`;const authors=(paper.author??[]).slice(0,5).map(author=>[author.given,author.family].filter(Boolean).join(" ")).filter(Boolean).join(" · ");const citations=Number(paper["is-referenced-by-count"]??0);const insert=await db.prepare(`INSERT OR IGNORE INTO papers (paper_id,title,abstract,authors,year,published_at,url,category,category_label,citations,added_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(paperId,title,abstract,authors,year,publishedAt,paperUrl,feed.category,feed.label,citations,today).run();if(Number(insert.meta.changes??0)>0)added+=1;else await db.prepare("UPDATE papers SET url = ?, published_at = COALESCE(?, published_at), citations = MAX(citations, ?) WHERE paper_id = ?").bind(paperUrl,publishedAt,citations,paperId).run()}
     }catch{continue}
   }
+  if(successfulFeeds===0)return {live:false,added,skipped:false};
   const syncedAt=now.toISOString(); await db.prepare(`INSERT INTO paper_sync (id,last_sync_date,last_sync_at,added_count) VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET last_sync_date=excluded.last_sync_date,last_sync_at=excluded.last_sync_at,added_count=excluded.added_count`).bind("global",today,syncedAt,added).run();
   return {live:true,added,skipped:false};
 }

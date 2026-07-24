@@ -26,6 +26,6 @@ export function AccumulatingPaperLibrary() {
     </article>)}</div>
     {!loading&&!data.papers.length&&<div className="empty-library">没有找到匹配论文，请尝试其他关键词。</div>}
     <div className="pagination"><button disabled={page<=1} onClick={()=>setPage(p=>p-1)}>← 上一页</button><span>{data.page} / {data.pages}</span><button disabled={page>=data.pages} onClick={()=>setPage(p=>p+1)}>下一页 →</button></div>
-    <p className="paper-source">论文元数据来自 Semantic Scholar Academic Graph。原文优先使用 arXiv，其次使用 DOI 或开放 PDF；无法访问时可使用备用搜索。摘要翻译由 Bing Translator 提供。</p>
+    <p className="paper-source">论文元数据主要来自 Crossref，并通过标题与摘要进行机器人主题筛选；原文优先使用 DOI，无法访问时可使用备用搜索。摘要翻译由 Bing Translator 提供。</p>
   </>;
 }
